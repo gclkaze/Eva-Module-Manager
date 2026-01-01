@@ -8,9 +8,9 @@ import (
 )
 
 var rootCmd = &cobra.Command{
-	Use:   "myapp",
-	Short: "MyApp is a CLI tool",
-	Long:  "MyApp is a CLI tool that can search artifacts using tags",
+	Use:   "emm",
+	Short: "EMM is a CLI tool",
+	Long:  "EMM is a CLI tool that can search artifacts using tags",
 }
 
 func Execute() {
