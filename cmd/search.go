@@ -16,41 +16,12 @@ var searchCmd = &cobra.Command{
 	Short: "Search artifacts",
 	Long:  "Search artifacts using one or more tags",
 	Args: func(cmd *cobra.Command, args []string) error {
-		// Either flags OR positional args must be provided
-		if len(args) == 0 && len(tags) == 0 && len(description) == 0 {
+		if len(args) == 0 && len(tags) == 0 && len(description) == 0 && len(name) == 0 {
 			return fmt.Errorf("provide search terms either as arguments or via --tags/--name/--description")
 		}
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-
-		// Allow: --tags "super parser"
-		/*		if len(tags) == 1 {
-					tags = strings.Fields(tags[0])
-				}
-
-				if len(name) == 1 {
-					name = strings.Fields(name[0])
-				}
-
-				if len(description) == 1 {
-					description = strings.Fields(description[0])
-				}*/
-
-		/*		fmt.Println("Searching with tags:")
-				for _, tag := range tags {
-					fmt.Println(" -", tag)
-				}
-
-				fmt.Println("Searching with name:")
-				for _, n := range name {
-					fmt.Println(" -", n)
-				}
-
-				fmt.Println("Searching with name:")
-				for _, d := range description {
-					fmt.Println(" -", d)
-				}*/
 
 		query := ""
 		if len(description) == 0 && len(name) == 0 && len(tags) == 0 {
@@ -61,14 +32,10 @@ var searchCmd = &cobra.Command{
 		if query != "" {
 			err := application.SearchByQuery(query)
 			return err
-		} else {
-			err := application.SearchByComponents(name, description, tags)
-			return err
-
 		}
 
-		//is everything empty?
-		return nil
+		err := application.SearchByComponents(name, description, tags)
+		return err
 	},
 }
 

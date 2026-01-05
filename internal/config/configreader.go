@@ -98,6 +98,10 @@ func (c ConfigReader) IsOnError() bool {
 	return c.onError
 }
 
+func (c ConfigReader) GetError() error {
+	return c.error
+}
+
 func (c *ConfigReader) GetProperties() *properties.Properties {
 	return c.properties
 }
