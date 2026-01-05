@@ -2,6 +2,9 @@ package services
 
 import (
 	"emm/internal/backend"
+	"emm/internal/models"
+	"emm/internal/output"
+	"encoding/json"
 	"fmt"
 	"io"
 	"net/http"
@@ -9,6 +12,7 @@ import (
 
 type ModuleSearchService struct {
 	backend *backend.Backend
+	output  output.Printer
 }
 
 func NewModuleSearchService() *ModuleSearchService {
@@ -17,6 +21,10 @@ func NewModuleSearchService() *ModuleSearchService {
 
 func (inst *ModuleSearchService) SetBackend(backend *backend.Backend) {
 	inst.backend = backend
+}
+
+func (inst *ModuleSearchService) SetPrinter(output output.Printer) {
+	inst.output = output
 }
 
 func (inst ModuleSearchService) SearchByComponents(name []string, description []string, tags []string) error {
@@ -46,14 +54,20 @@ func (inst ModuleSearchService) SearchByComponents(name []string, description []
 	req.URL.RawQuery = q.Encode()
 	client := &http.Client{}
 	resp, err := client.Do(req)
-	defer resp.Body.Close()
-
 	if err != nil {
 		return err
 	}
+	defer resp.Body.Close()
 
 	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode == http.StatusOK {
+		var response models.RequestResult[[]models.Module]
+		err = json.Unmarshal(body, &response)
+		inst.output.PrintModules(response.Value)
+
+	}
 	fmt.Println(resp.Status)
 	fmt.Println(string(body))
+
 	return err
 }

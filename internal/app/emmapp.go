@@ -25,6 +25,8 @@ func (inst *EMMApp) Init() error {
 	}
 
 	inst.searchService.SetBackend(inst.backend)
+	inst.searchService.SetPrinter(inst.output)
+
 	return nil
 }
 
