@@ -21,7 +21,7 @@ func (p *ConsolePrinter) Info(msg string) {
 }
 
 func (p *ConsolePrinter) Error(err error) {
-	fmt.Fprintln(os.Stderr, err.Error())
+	fmt.Fprintln(os.Stderr, "Error: "+err.Error())
 }
 
 func (p ConsolePrinter) PrintModules(mods []models.Module) {
@@ -45,7 +45,7 @@ func (p ConsolePrinter) PrintModules(mods []models.Module) {
 		fmt.Printf(
 			"%-*s (%s) - %s [%s]%s\n",
 			maxRepr,
-			name(m.Repr),
+			name(m.RepoName),
 			m.Title,
 			m.Description,
 			meta(fmt.Sprintf("[%d]", m.Releases)),
@@ -54,9 +54,45 @@ func (p ConsolePrinter) PrintModules(mods []models.Module) {
 	}
 }
 
+func (p ConsolePrinter) PrintModuleInfo(m models.ModuleEnrichedInformation) {
+	maxRepr := 0
+	if len(m.Repr) > maxRepr {
+		maxRepr = len(m.Repr)
+	}
+
+	name := color.New(color.FgGreen).SprintFunc()
+	meta := color.New(color.FgHiBlack).SprintFunc()
+
+	tags := ""
+	if len(m.Tags) > 0 {
+		sort.Strings(m.Tags)
+		tags = p.formatTags(m.Tags, 5)
+		//tags = fmt.Sprintf(" {%s}", strings.Join(m.Tags, ","))
+	}
+
+	fmt.Printf(
+		"%-*s (%s) - %s [%s]%s\n",
+		maxRepr,
+		name(m.RepoName),
+		m.Title,
+		m.Description,
+		meta(fmt.Sprintf("[%d]", len(m.ReleaseInfo))),
+		meta(fmt.Sprintf("{%s}", tags)),
+	)
+
+	for i := range m.ReleaseInfo {
+		p.PrintReleaseInfo(m.ReleaseInfo[i])
+	}
+
+}
+
 func (p ConsolePrinter) formatTags(tags []string, max int) string {
 	if len(tags) <= max {
 		return strings.Join(tags, ",")
 	}
 	return strings.Join(tags[:max], ",") + ",…"
+}
+
+func (p ConsolePrinter) PrintReleaseInfo(r models.Release) {
+
 }

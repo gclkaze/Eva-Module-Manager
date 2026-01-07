@@ -63,11 +63,65 @@ func (inst ModuleSearchService) SearchByComponents(name []string, description []
 	if resp.StatusCode == http.StatusOK {
 		var response models.RequestResult[[]models.Module]
 		err = json.Unmarshal(body, &response)
+		if err != nil {
+			inst.output.Error(err)
+			return err
+		}
 		inst.output.PrintModules(response.Value)
-
+	} else {
+		err = fmt.Errorf("couldn't fetch the module information")
+		inst.output.Error(err)
 	}
-	fmt.Println(resp.Status)
-	fmt.Println(string(body))
+	/*	fmt.Println(resp.Status)
+		fmt.Println(string(body))*/
+
+	return err
+}
+
+func (inst ModuleSearchService) GetModuleInfo(moduleName string) error {
+	url, err := inst.backend.GetServerURL()
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s%s%s", url, APIGroup, ModulesGroup, ModuleGetInfoEndpoint), nil)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Accept", "application/json")
+	//req.Header.Set("Authorization", "Bearer YOUR_TOKEN")
+	q := req.URL.Query()
+	q.Add("moduleName", moduleName)
+
+	req.URL.RawQuery = q.Encode()
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode == http.StatusOK {
+		var response models.RequestResult[models.ModuleEnrichedInformation]
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			inst.output.Error(err)
+			return err
+		}
+		inst.output.PrintModuleInfo(response.Value)
+	} else {
+		//err = fmt.Errorf("couldn't fetch the module information")
+		var response models.ErrorResult
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			inst.output.Error(err)
+			return err
+		}
+		inst.output.Error(fmt.Errorf("%s", response.Details))
+		err = nil
+	}
 
 	return err
 }

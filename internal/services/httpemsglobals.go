@@ -9,6 +9,7 @@ const (
 
 	ModulesGroup          = "/modules"
 	ModuleSearchEndpoint  = "/search"
+	ModuleGetInfoEndpoint = "/info"
 	ModuleDeleteEndpoint  = "/delete"
 	ModuleUploadEndpoint  = "/upload"
 	ModuleUpdateEndpoint  = "/update"

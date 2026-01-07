@@ -43,3 +43,7 @@ func (inst EMMApp) SearchByQuery(query string) error {
 	l := strings.Split(query, ",")
 	return inst.SearchByComponents(l, l, l)
 }
+
+func (inst EMMApp) GetModuleInfo(query string) error {
+	return inst.searchService.GetModuleInfo(query)
+}
