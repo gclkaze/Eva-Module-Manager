@@ -7,5 +7,5 @@ type Printer interface {
 	Error(err error)
 	PrintModules(mod []models.Module)
 	PrintModuleInfo(m models.ModuleEnrichedInformation)
-	PrintReleaseInfo(r models.Release)
+	PrintReleaseInfo(moduleRepr string, r models.Release)
 }
