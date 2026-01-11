@@ -112,7 +112,6 @@ func (inst ModuleSearchService) GetModuleInfo(moduleName string) error {
 		}
 		inst.output.PrintModuleInfo(response.Value)
 	} else {
-		//err = fmt.Errorf("couldn't fetch the module information")
 		var response models.ErrorResult
 		err = json.Unmarshal(body, &response)
 		if err != nil {

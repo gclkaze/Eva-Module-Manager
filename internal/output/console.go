@@ -22,7 +22,8 @@ func (p *ConsolePrinter) Info(msg string) {
 }
 
 func (p *ConsolePrinter) Error(err error) {
-	fmt.Fprintln(os.Stderr, "Error: "+err.Error())
+	errorColor := color.New(color.FgHiRed, color.Bold).SprintFunc()
+	fmt.Fprintln(os.Stderr, errorColor("Error: "+err.Error()))
 }
 
 func (p ConsolePrinter) PrintModules(mods []models.Module) {
@@ -81,6 +82,12 @@ func (p ConsolePrinter) PrintModuleInfo(m models.ModuleEnrichedInformation) {
 		meta(fmt.Sprintf("{%s}", tags)),
 	)
 
+	if len(m.ReleaseInfo) == 0 {
+		error := color.New(color.BgHiRed).SprintFunc()
+		fmt.Printf("Couldn't find any available releases for %s", error(m.RepoName))
+		return
+	}
+
 	for i := range m.ReleaseInfo {
 		p.PrintReleaseInfo(m.RepoName, m.ReleaseInfo[i])
 	}
@@ -125,7 +132,6 @@ func (p ConsolePrinter) PrintReleaseInfo(moduleRepr string, r models.Release) {
 		fmt.Printf("     %s\n", meta(r.Description))
 	}
 
-	// 👇 Installation hint
 	fmt.Printf(
 		"     %s %s\n",
 		meta("→ install:"),
