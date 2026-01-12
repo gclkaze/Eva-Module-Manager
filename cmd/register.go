@@ -4,13 +4,13 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var loginEmail string
-var pwd string
+var registrationEmail string
+var registrationPwd string
 
-var loginCmd = &cobra.Command{
-	Use:   "login",
-	Short: "User login to the Module Repository Server using an email and a password.",
-	Long:  "User login to the Module Repository Server  using a email and a password, allowing him/her to perform Module management operations",
+var registerCmd = &cobra.Command{
+	Use:   "register",
+	Short: "Register to the Module Repository Server using an email and a password.",
+	Long:  "Register to the Module Repository Server using a username and a password, allowing him/her to perform Module management operations",
 	Args: func(cmd *cobra.Command, args []string) error {
 		/*		if len(args) != 1 {
 					return fmt.Errorf("provide the module name or module-name@version for module/release information")
@@ -25,18 +25,18 @@ var loginCmd = &cobra.Command{
 }
 
 func init() {
-	rootCmd.AddCommand(loginCmd)
+	rootCmd.AddCommand(registerCmd)
 
-	loginCmd.Flags().StringVarP(
-		&loginEmail,
-		"username",
+	registerCmd.Flags().StringVarP(
+		&registrationEmail,
+		"email",
 		"u",
 		"",
 		"The user's email",
 	)
 
-	loginCmd.Flags().StringVarP(
-		&pwd,
+	registerCmd.Flags().StringVarP(
+		&registrationPwd,
 		"password",
 		"p",
 		"",
