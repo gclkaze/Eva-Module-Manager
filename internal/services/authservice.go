@@ -7,9 +7,11 @@ import (
 	"emm/internal/models/userinput"
 	"emm/internal/output"
 	"encoding/json"
+	"errors"
 	"fmt"
 	"io"
 	"net/http"
+	"strings"
 
 	"github.com/magiconair/properties"
 )
@@ -20,6 +22,8 @@ type AuthService struct {
 	output         output.Printer
 	currentUser    *models.User
 	backend        *backend.Backend
+
+	currentUserKey string
 }
 
 func NewAuthService() *AuthService {
@@ -40,19 +44,20 @@ func (inst *AuthService) SetPrinter(output output.Printer) {
 
 func (inst *AuthService) SetProperties(props *properties.Properties) {
 	inst.props = props
+	inst.currentUserKey = props.GetString("currentUserKey", "EMMCurrentUser")
 	inst.keyringService.SetProperties(props)
 }
 
 func (inst *AuthService) Register(creds *userinput.RegistrationCreds) (bool, error) {
-	url, err := inst.backend.GetServerURL()
-	if err != nil {
-		return false, err
-	}
-
 	email := creds.Email
 	if inst.keyringService.KeyExists(email) {
 		inst.output.Info(fmt.Sprintf("User %s is already registered.", creds.Email))
 		return true, nil
+	}
+
+	url, err := inst.backend.GetServerURL()
+	if err != nil {
+		return false, err
 	}
 
 	var buf *bytes.Buffer
@@ -92,12 +97,128 @@ func (inst *AuthService) Register(creds *userinput.RegistrationCreds) (bool, err
 	return false, err
 }
 
+func (inst *AuthService) Login(creds *userinput.LoginCreds) (bool, error) {
+	email := creds.Email
+	if inst.keyringService.KeyExists(email) {
+		inst.output.Info(fmt.Sprintf("User %s is already logged on.", creds.Email))
+		return true, nil
+	}
+
+	url, err := inst.backend.GetServerURL()
+	if err != nil {
+		return false, err
+	}
+
+	var buf *bytes.Buffer
+	if creds != nil {
+		b, _ := json.Marshal(creds)
+		buf = bytes.NewBuffer(b)
+	} else {
+		buf = bytes.NewBuffer(nil)
+	}
+	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s%s%s", url, APIGroup, AuthGroup, LoginEndpoint), buf)
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode == http.StatusOK {
+		var response models.RequestResult[models.LoginResponse]
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			inst.output.Error(err)
+			return false, err
+		}
+		inst.keyringService.SaveToken(creds.Email, inst.combineToken(response.Value))
+		inst.output.Info(fmt.Sprintf("User %s is logged on successfully.", creds.Email))
+
+		inst.SwitchActiveUser(creds.Email)
+
+		return true, nil
+	}
+	var response models.ErrorResult
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return false, err
+	}
+	err = fmt.Errorf("%s", response.Error)
+	return false, err
+}
+
+func (inst AuthService) getRefreshToken(email string) (string, error) {
+	tk, err := inst.keyringService.LoadToken(email)
+	if err != nil {
+		return "", nil
+	}
+
+	toks := strings.Split(tk, " ")
+	if len(toks) != 2 {
+		return "", errors.New("incorrect token format")
+	}
+	return toks[1], nil
+}
+
 func (inst AuthService) combineToken(resp models.LoginResponse) string {
 	return fmt.Sprintf("%s %s", resp.AccessToken, resp.RefreshToken)
 }
 
-func (inst *AuthService) Login(email string, pwd string) (string, error) {
-	return "", nil
+func (inst *AuthService) refreshToken(email string) (bool, error) {
+
+	url, err := inst.backend.GetServerURL()
+	if err != nil {
+		return false, err
+	}
+
+	reft, err := inst.getRefreshToken(email)
+	if err != nil {
+		return false, err
+	}
+
+	if reft == "" {
+		return false, errors.New("empty ref token")
+	}
+
+	var buf *bytes.Buffer
+	creds := models.NewRefreshRequest(reft)
+
+	if creds != nil {
+		b, _ := json.Marshal(creds)
+		buf = bytes.NewBuffer(b)
+	} else {
+		buf = bytes.NewBuffer(nil)
+	}
+	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s%s%s", url, APIGroup, AuthGroup, RefreshEndpoint), buf)
+	req.Header.Set("Content-Type", "application/json")
+	client := &http.Client{}
+	resp, err := client.Do(req)
+	if err != nil {
+		return false, err
+	}
+	defer resp.Body.Close()
+
+	body, _ := io.ReadAll(resp.Body)
+	if resp.StatusCode == http.StatusOK {
+		var response models.RequestResult[models.LoginResponse]
+		err = json.Unmarshal(body, &response)
+		if err != nil {
+			inst.output.Error(err)
+			return false, err
+		}
+		inst.keyringService.SaveToken(email, inst.combineToken(response.Value))
+		inst.SwitchActiveUser(email)
+		return true, nil
+	}
+	var response models.ErrorResult
+	err = json.Unmarshal(body, &response)
+	if err != nil {
+		return false, err
+	}
+	err = fmt.Errorf("%s", response.Error)
+	return false, err
 }
 
 func (inst *AuthService) Logout(email string) (string, error) {
@@ -108,8 +229,12 @@ func (inst *AuthService) Logout(email string) (string, error) {
 	return "", nil
 }*/
 
-func (inst *AuthService) SwitchActiveUser(email string) (string, error) {
-	return "", nil
+func (inst AuthService) SwitchActiveUser(email string) {
+	inst.keyringService.SaveToken(inst.currentUserKey, email)
+}
+
+func (inst AuthService) GetActiveUser() (string, error) {
+	return inst.keyringService.LoadToken(inst.currentUserKey)
 }
 
 func (inst *AuthService) GetStatus() error {

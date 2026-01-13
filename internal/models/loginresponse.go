@@ -8,3 +8,7 @@ type LoginResponse struct {
 type RefreshRequest struct {
 	RefreshToken string `json:"refreshToken"`
 }
+
+func NewRefreshRequest(tok string) *RefreshRequest {
+	return &RefreshRequest{RefreshToken: tok}
+}

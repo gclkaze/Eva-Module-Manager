@@ -52,6 +52,11 @@ func (inst EMMApp) UserRegister(creds *userinput.RegistrationCreds) error {
 	return err
 }
 
+func (inst EMMApp) UserLogin(creds *userinput.LoginCreds) error {
+	_, err := inst.authService.Login(creds)
+	return err
+}
+
 func (inst EMMApp) SearchBySearchQuery(q *userinput.ModuleSearchQuery) error {
 	err := inst.searchService.SearchByComponents(q.Name, q.Description, q.Tags)
 	return err
