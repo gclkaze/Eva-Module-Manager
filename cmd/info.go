@@ -27,25 +27,4 @@ var showCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(showCmd)
-
-	/*	showCmd.Flags().StringVarP(
-		&module,
-		"module",
-		"m",
-		"",
-		"Module to search for",
-	)*/
-
-	/*
-
-		showCmd.Flags().StringSliceVarP(
-			&releases,
-			"release",
-			"r",
-			[]string{},
-			"Module release to search for (space-separated or repeatable)",
-		)*/
-
-	// Optional: enforce at least one tag
-	//searchCmd.MarkFlagRequired("tags")
 }

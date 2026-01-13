@@ -23,7 +23,17 @@ func (p *ConsolePrinter) Info(msg string) {
 
 func (p *ConsolePrinter) Error(err error) {
 	errorColor := color.New(color.FgHiRed, color.Bold).SprintFunc()
-	fmt.Fprintln(os.Stderr, errorColor("Error: "+err.Error()))
+	theError := err.Error()
+
+	if strings.Contains(theError, "because the target machine actively refused it") {
+		theError = "Couldn't connect to the Module Repository Server..check your internet connection"
+	}
+	fmt.Fprintln(os.Stderr, errorColor("Error: "+theError))
+}
+
+func (p *ConsolePrinter) Success(msg string) {
+	successColor := color.New(color.FgHiGreen, color.Bold).SprintFunc()
+	fmt.Fprintln(os.Stderr, successColor(msg))
 }
 
 func (p ConsolePrinter) PrintModules(mods []models.Module) {
@@ -41,7 +51,6 @@ func (p ConsolePrinter) PrintModules(mods []models.Module) {
 		if len(m.Tags) > 0 {
 			sort.Strings(m.Tags)
 			tags = p.formatTags(m.Tags, 5)
-			//tags = fmt.Sprintf(" {%s}", strings.Join(m.Tags, ","))
 		}
 
 		fmt.Printf(
@@ -69,7 +78,6 @@ func (p ConsolePrinter) PrintModuleInfo(m models.ModuleEnrichedInformation) {
 	if len(m.Tags) > 0 {
 		sort.Strings(m.Tags)
 		tags = p.formatTags(m.Tags, 5)
-		//tags = fmt.Sprintf(" {%s}", strings.Join(m.Tags, ","))
 	}
 
 	fmt.Printf(

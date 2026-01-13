@@ -1,30 +1,34 @@
 package cmd
 
 import (
+	"emm/internal/models/userinput"
 	"fmt"
 	"strings"
 
 	"github.com/spf13/cobra"
 )
 
+/*
 var tags []string
 var name []string
 var description []string
+*/
+var searchQuery *userinput.ModuleSearchQuery
 
 var searchCmd = &cobra.Command{
 	Use:   "search",
 	Short: "Search artifacts",
 	Long:  "Search artifacts using one or more tags",
 	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) == 0 && len(tags) == 0 && len(description) == 0 && len(name) == 0 {
+		if len(args) == 0 && searchQuery.IsEmpty() {
 			return fmt.Errorf("provide search terms either as arguments or via --tags/--name/--description")
 		}
 		return nil
 	},
-	RunE: func(cmd *cobra.Command, args []string) error {
 
+	RunE: func(cmd *cobra.Command, args []string) error {
 		query := ""
-		if len(description) == 0 && len(name) == 0 && len(tags) == 0 {
+		if searchQuery.IsEmpty() {
 			query = strings.Join(args, " ")
 			fmt.Println("Search query:", query)
 
@@ -34,18 +38,18 @@ var searchCmd = &cobra.Command{
 			return err
 		}
 
-		err := application.SearchByComponents(name, description, tags)
+		err := application.SearchBySearchQuery(searchQuery)
 		return err
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(searchCmd)
-
+	searchQuery = userinput.NewModuleSearchQuery()
 	// --tags "super parser"
 	// --tags super --tags parser
 	searchCmd.Flags().StringSliceVarP(
-		&tags,
+		&searchQuery.Tags,
 		"tags",
 		"t",
 		[]string{},
@@ -53,7 +57,7 @@ func init() {
 	)
 
 	searchCmd.Flags().StringSliceVarP(
-		&name,
+		&searchQuery.Name,
 		"name",
 		"n",
 		[]string{},
@@ -61,7 +65,7 @@ func init() {
 	)
 
 	searchCmd.Flags().StringSliceVarP(
-		&description,
+		&searchQuery.Description,
 		"description",
 		"d",
 		[]string{},

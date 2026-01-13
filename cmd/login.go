@@ -1,21 +1,25 @@
 package cmd
 
 import (
+	"emm/internal/models/userinput"
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
-var loginEmail string
-var pwd string
+var creds *userinput.LoginCreds
 
 var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "User login to the Module Repository Server using an email and a password.",
 	Long:  "User login to the Module Repository Server  using a email and a password, allowing him/her to perform Module management operations",
 	Args: func(cmd *cobra.Command, args []string) error {
-		/*		if len(args) != 1 {
-					return fmt.Errorf("provide the module name or module-name@version for module/release information")
-				}
-				module = args[0]*/
+		if len(args) != 1 {
+			err := fmt.Errorf("both email and password are required")
+			application.GetPrinter().Error(err)
+			return nil
+		}
+
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
@@ -26,9 +30,9 @@ var loginCmd = &cobra.Command{
 
 func init() {
 	rootCmd.AddCommand(loginCmd)
-
+	creds = userinput.NewLoginCreds()
 	loginCmd.Flags().StringVarP(
-		&loginEmail,
+		&creds.Email,
 		"username",
 		"u",
 		"",
@@ -36,7 +40,7 @@ func init() {
 	)
 
 	loginCmd.Flags().StringVarP(
-		&pwd,
+		&creds.Password,
 		"password",
 		"p",
 		"",

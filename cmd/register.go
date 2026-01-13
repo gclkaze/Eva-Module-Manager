@@ -1,34 +1,66 @@
 package cmd
 
 import (
+	"emm/internal/models/userinput"
+	"emm/pkg/utils"
+	"fmt"
+
 	"github.com/spf13/cobra"
 )
 
-var registrationEmail string
-var registrationPwd string
+var registrationCreds *userinput.RegistrationCreds
 
 var registerCmd = &cobra.Command{
 	Use:   "register",
-	Short: "Register to the Module Repository Server using an email and a password.",
-	Long:  "Register to the Module Repository Server using a username and a password, allowing him/her to perform Module management operations",
+	Short: "Register to the Module Repository Server using an email, a password, a handle and your first name and last name.",
+	Long:  "Register to the Module Repository Server using a username and a password, a handle and your first name and last name, in order to perform Module management operations and contribute to the EVA Module Developer.",
 	Args: func(cmd *cobra.Command, args []string) error {
-		/*		if len(args) != 1 {
-					return fmt.Errorf("provide the module name or module-name@version for module/release information")
-				}
-				module = args[0]*/
+		if !registrationCreds.AllInformationProvidedExceptPassword() {
+			err := fmt.Errorf("in order to register, you will need to provide information such as your email, first & last name, a password and a handle; a unique identifier for your profile")
+			application.GetPrinter().Error(err)
+			return nil
+		}
+
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
-		//err := application.GetModuleInfo(module)
-		return nil //err
+		var err error
+		pwd, err := utils.ReadPassword("Password: ")
+		if err != nil {
+			application.GetPrinter().Error(err)
+			return nil
+		}
+		registrationCreds.Password = pwd
+		if registrationCreds.Password == "" {
+			err = fmt.Errorf("no password provided")
+			application.GetPrinter().Error(err)
+			return nil
+		}
+
+		err = registrationCreds.AreValid()
+		if err != nil {
+			application.GetPrinter().Error(err)
+			return nil
+		}
+
+		if !registrationCreds.AllInformationProvided() {
+			err = fmt.Errorf("in order to register, you will need to provide information such as your email, first & last name, a password and a handle; a unique identifier for your profile")
+			application.GetPrinter().Error(err)
+			return nil
+		}
+		err = application.UserRegister(registrationCreds)
+		if err != nil {
+			application.GetPrinter().Error(err)
+		}
+		return nil
 	},
 }
 
 func init() {
 	rootCmd.AddCommand(registerCmd)
-
+	registrationCreds = userinput.NewRegistrationCreds()
 	registerCmd.Flags().StringVarP(
-		&registrationEmail,
+		&registrationCreds.Email,
 		"email",
 		"u",
 		"",
@@ -36,10 +68,31 @@ func init() {
 	)
 
 	registerCmd.Flags().StringVarP(
-		&registrationPwd,
-		"password",
-		"p",
+		&registrationCreds.FirstName,
+		"firstname",
+		"f",
 		"",
-		"The user's password",
+		"The user's first name",
 	)
+
+	registerCmd.Flags().StringVarP(
+		&registrationCreds.LastName,
+		"lastname",
+		"l",
+		"",
+		"The user's last name",
+	)
+
+	registerCmd.Flags().StringVarP(
+		&registrationCreds.Handle,
+		"handle",
+		"a",
+		"",
+		"The user's handle",
+	)
+
+	_ = registerCmd.MarkFlagRequired("email")
+	_ = registerCmd.MarkFlagRequired("firstname")
+	_ = registerCmd.MarkFlagRequired("lastname")
+	_ = registerCmd.MarkFlagRequired("handle")
 }

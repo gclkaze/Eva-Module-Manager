@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"emm/internal/app"
+	"emm/internal/config"
 	"emm/internal/output"
 	"emm/internal/services"
 	"fmt"
@@ -20,13 +21,20 @@ var application *app.EMMApp
 
 func initApp() error {
 	moduleSearchService := services.NewModuleSearchService()
+	authService := services.NewAuthService()
 
 	application = app.NewEMMApp(
 		moduleSearchService,
+		authService,
 		output.NewConsolePrinter(),
 	)
 
-	return application.Init()
+	err := application.Init()
+	if err != nil {
+		return err
+	}
+	authService.SetProperties(config.TheConfigReader.GetProperties())
+	return nil
 }
 
 func Execute() {
