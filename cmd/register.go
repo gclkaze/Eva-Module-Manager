@@ -18,12 +18,17 @@ var registerCmd = &cobra.Command{
 		if !registrationCreds.AllInformationProvidedExceptPassword() {
 			err := fmt.Errorf("in order to register, you will need to provide information such as your email, first & last name, a password and a handle; a unique identifier for your profile")
 			application.GetPrinter().Error(err)
+			application.SetOnError()
 			return nil
 		}
 
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if application.IsOnError() {
+			return nil
+		}
+
 		var err error
 		pwd, err := utils.ReadPassword("Password: ")
 		if err != nil {
@@ -62,7 +67,7 @@ func init() {
 	registerCmd.Flags().StringVarP(
 		&registrationCreds.Email,
 		"email",
-		"u",
+		"e",
 		"",
 		"The user's email",
 	)

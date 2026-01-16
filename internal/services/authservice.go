@@ -101,6 +101,7 @@ func (inst *AuthService) Login(creds *userinput.LoginCreds) (bool, error) {
 	email := creds.Email
 	if inst.keyringService.KeyExists(email) {
 		inst.output.Info(fmt.Sprintf("User %s is already logged on.", creds.Email))
+		inst.switchActiveUser(creds.Email)
 		return true, nil
 	}
 
@@ -136,7 +137,7 @@ func (inst *AuthService) Login(creds *userinput.LoginCreds) (bool, error) {
 		inst.keyringService.SaveToken(creds.Email, inst.combineToken(response.Value))
 		inst.output.Info(fmt.Sprintf("User %s is logged on successfully.", creds.Email))
 
-		inst.SwitchActiveUser(creds.Email)
+		inst.switchActiveUser(creds.Email)
 
 		return true, nil
 	}
@@ -209,7 +210,7 @@ func (inst *AuthService) refreshToken(email string) (bool, error) {
 			return false, err
 		}
 		inst.keyringService.SaveToken(email, inst.combineToken(response.Value))
-		inst.SwitchActiveUser(email)
+		inst.switchActiveUser(email)
 		return true, nil
 	}
 	var response models.ErrorResult
@@ -221,20 +222,101 @@ func (inst *AuthService) refreshToken(email string) (bool, error) {
 	return false, err
 }
 
-func (inst *AuthService) Logout(email string) (string, error) {
-	return "", nil
+func (inst *AuthService) Logout(email string) error {
+	if email == "" {
+		//logout current user
+		active, err := inst.GetActiveUser()
+		if err != nil {
+			return fmt.Errorf("no current active user")
+		}
+
+		//logout user
+		err = inst.logoutUser(active)
+		if err != nil {
+			return err
+		}
+
+		//we need to clear the currentUser
+		return inst.deleteActiveUser()
+	}
+
+	err := inst.logoutUser(email)
+	if err != nil {
+		return err
+	}
+	active, err := inst.GetActiveUser()
+	if err != nil {
+		return nil
+	}
+
+	if active == email {
+		return inst.deleteActiveUser()
+	}
+
+	return nil
+}
+
+func (inst *AuthService) logoutUser(email string) error {
+	if !inst.keyringService.KeyExists(email) {
+		return fmt.Errorf("user with email %s is not logged in", email)
+	}
+	inst.output.Info(fmt.Sprintf("Logging out User %s", email))
+	return inst.keyringService.DeleteToken(email)
 }
 
 /*func (inst *AuthService) SetActiveUser(email string) (string, error) {
 	return "", nil
 }*/
 
-func (inst AuthService) SwitchActiveUser(email string) {
+func (inst AuthService) switchActiveUser(email string) {
 	inst.keyringService.SaveToken(inst.currentUserKey, email)
+}
+
+func (inst AuthService) deleteActiveUser() error {
+	return inst.keyringService.DeleteToken(inst.currentUserKey)
+}
+
+func (inst AuthService) deleteActiveUserIfExists() {
+	if inst.keyringService.KeyExists(inst.currentUserKey) {
+		inst.keyringService.DeleteToken(inst.currentUserKey)
+		return
+	}
+}
+
+func (inst AuthService) SwitchCurrentActiveUser(email string) error {
+	active, err := inst.GetActiveUser()
+	if err == nil {
+		if active == email {
+			inst.output.Info(fmt.Sprintf("The current active User is %s already.", email))
+			return nil
+		}
+	}
+
+	//need to check if we know this user
+	s, err := inst.keyringService.LoadToken(email)
+	if err != nil {
+		return fmt.Errorf("unknown user %s", email)
+	}
+	if s == "" {
+		return fmt.Errorf("unknown user %s", email)
+	}
+
+	inst.switchActiveUser(email)
+	inst.output.Info(fmt.Sprintf("The current active User is %s", email))
+	return nil
 }
 
 func (inst AuthService) GetActiveUser() (string, error) {
 	return inst.keyringService.LoadToken(inst.currentUserKey)
+}
+
+func (inst AuthService) ShowCurrentUser() error {
+	active, err := inst.GetActiveUser()
+	if err != nil {
+		return fmt.Errorf("no current active user")
+	}
+	inst.output.Info(active)
+	return nil
 }
 
 func (inst *AuthService) GetStatus() error {

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"emm/internal/models/userinput"
+	"emm/pkg/utils"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -12,23 +13,28 @@ var creds *userinput.LoginCreds
 var loginCmd = &cobra.Command{
 	Use:   "login",
 	Short: "User login to the Module Repository Server using an email and a password.",
-	Long:  "User login to the Module Repository Server  using a email and a password, allowing him/her to perform Module management operations",
+	Long:  "User login to the Module Repository Server  using a email and a password, allowing him/her to perform Module management operations.",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if !creds.AllInformationProvidedExceptPassword() {
 			err := fmt.Errorf("in order to login, you will need to provide a valid registered email")
 			application.GetPrinter().Error(err)
+			application.SetOnError()
 			return nil
 		}
 		return nil
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if application.IsOnError() {
+			return nil
+		}
+
 		var err error
-		/*pwd, err := utils.ReadPassword("Password: ")
+		pwd, err := utils.ReadPassword("Password: ")
 		if err != nil {
 			application.GetPrinter().Error(err)
 			return nil
-		}*/
-		pwd := "mypass"
+		}
+		//pwd := "mypass"
 		creds.Password = pwd
 		if creds.Password == "" {
 			err = fmt.Errorf("no password provided")
@@ -36,12 +42,12 @@ var loginCmd = &cobra.Command{
 			return nil
 		}
 
-		/*	err = creds.AreValid()
-			if err != nil {
-				application.GetPrinter().Error(err)
-				return nil
-			}
-		*/
+		err = creds.AreValid()
+		if err != nil {
+			application.GetPrinter().Error(err)
+			return nil
+		}
+
 		if !creds.AllInformationProvided() {
 			err = fmt.Errorf("in order to register, you will need to provide information such as your email & your password")
 			application.GetPrinter().Error(err)
@@ -61,7 +67,7 @@ func init() {
 	loginCmd.Flags().StringVarP(
 		&creds.Email,
 		"email",
-		"u",
+		"e",
 		"",
 		"The user's email",
 	)

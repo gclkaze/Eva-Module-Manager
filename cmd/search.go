@@ -21,12 +21,17 @@ var searchCmd = &cobra.Command{
 	Long:  "Search artifacts using one or more tags",
 	Args: func(cmd *cobra.Command, args []string) error {
 		if len(args) == 0 && searchQuery.IsEmpty() {
+			application.SetOnError()
 			return fmt.Errorf("provide search terms either as arguments or via --tags/--name/--description")
 		}
 		return nil
 	},
 
 	RunE: func(cmd *cobra.Command, args []string) error {
+		if application.IsOnError() {
+			return nil
+		}
+
 		query := ""
 		if searchQuery.IsEmpty() {
 			query = strings.Join(args, " ")

@@ -13,11 +13,21 @@ type EMMApp struct {
 	searchService *services.ModuleSearchService
 	authService   *services.AuthService
 	backend       *backend.Backend
+
+	onError bool
 }
 
 func NewEMMApp(searchService *services.ModuleSearchService, authService *services.AuthService, output output.Printer) *EMMApp {
 	backend := backend.NewBackend()
-	return &EMMApp{searchService: searchService, authService: authService, output: output, backend: backend}
+	return &EMMApp{searchService: searchService, authService: authService, output: output, backend: backend, onError: false}
+}
+
+func (inst EMMApp) IsOnError() bool {
+	return inst.onError
+}
+
+func (inst *EMMApp) SetOnError() {
+	inst.onError = true
 }
 
 func (inst EMMApp) GetPrinter() output.Printer {
@@ -52,8 +62,21 @@ func (inst EMMApp) UserRegister(creds *userinput.RegistrationCreds) error {
 	return err
 }
 
+func (inst *EMMApp) SwitchCurrentUser(email string) error {
+	return inst.authService.SwitchCurrentActiveUser(email)
+}
+
+func (inst EMMApp) ShowCurrentUser() error {
+	return inst.authService.ShowCurrentUser()
+}
+
 func (inst EMMApp) UserLogin(creds *userinput.LoginCreds) error {
 	_, err := inst.authService.Login(creds)
+	return err
+}
+
+func (inst EMMApp) UserLogout(email string) error {
+	err := inst.authService.Logout(email)
 	return err
 }
 
