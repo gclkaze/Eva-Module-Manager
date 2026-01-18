@@ -3,6 +3,7 @@ package utils
 import (
 	"errors"
 	"fmt"
+	"strconv"
 	"strings"
 
 	"github.com/rogpeppe/go-internal/semver"
@@ -27,6 +28,24 @@ func HumanSize(bytes int64) string {
 		float64(bytes)/float64(div),
 		"KMGTPE"[exp],
 	)
+}
+
+func UintToString(i uint) string {
+	return strconv.FormatUint(uint64(i), 10)
+}
+
+func UniqueStrings(in []string) []string {
+	seen := make(map[string]struct{})
+	out := make([]string, 0, len(in))
+
+	for _, v := range in {
+		if _, ok := seen[v]; ok {
+			continue
+		}
+		seen[v] = struct{}{}
+		out = append(out, v)
+	}
+	return out
 }
 
 func ParseModuleReleaseVersion(s string) (string, string, error) {

@@ -7,6 +7,8 @@ import (
 	"regexp"
 	"strings"
 	"unicode/utf8"
+
+	"github.com/rogpeppe/go-internal/semver"
 )
 
 var domainRegex = regexp.MustCompile(`^[a-zA-Z0-9.-]+\.[a-zA-Z]{2,}$`)
@@ -21,11 +23,14 @@ var ModuleReprMax = 50
 var passwordLengthMin = 12
 var passwordLengthMax = 128
 
-var nameMin = 1
+var nameMin = 5
 var nameMax = 50
 
 var handleMin = 3
 var handleMax = 30
+
+var repoNameMin = ModuleReprMin
+var repoNameMax = ModuleReprMax
 
 func IsValidEmail(email string) bool {
 	addr, err := mail.ParseAddress(email)
@@ -46,6 +51,28 @@ func IsValidName(name string) bool {
 		return false
 	}
 	return nameRegex.MatchString(name)
+}
+
+var repoNameRegex = regexp.MustCompile(
+	`^[A-Za-z0-9][A-Za-z0-9._-]{0,98}[A-Za-z0-9]$`,
+)
+
+func IsValidRepoName(name string) error {
+	if len(name) < ModuleReprMin {
+		return fmt.Errorf("a valid module name is between %d and %d character length, consist of digits, numbers,dash or/and underscore", repoNameMin, repoNameMax)
+	}
+	if len(name) > ModuleReprMax {
+		return fmt.Errorf("a valid module name is between %d and %d character length, consist of digits, numbers,dash or/and underscore", repoNameMin, repoNameMax)
+	}
+
+	if !repoNameRegex.MatchString(name) {
+		return fmt.Errorf("a valid module name is between %d and %d character length, consist of digits, numbers,dash or/and underscore", repoNameMin, repoNameMax)
+	}
+	return nil
+}
+
+func IsValidVersion(v string) bool {
+	return semver.IsValid("v" + v)
 }
 
 func IsValidModuleName(moduleName string) bool {

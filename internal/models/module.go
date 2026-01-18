@@ -1,6 +1,7 @@
 package models
 
 type Module struct {
+	ID          uint
 	RepoName    string
 	Title       string
 	Repr        string

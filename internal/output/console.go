@@ -21,6 +21,11 @@ func (p *ConsolePrinter) Info(msg string) {
 	fmt.Println(msg)
 }
 
+func (p *ConsolePrinter) Warn(msg string) {
+	warningColor := color.New(color.FgHiYellow, color.Bold).SprintFunc()
+	fmt.Fprintln(os.Stderr, warningColor(msg))
+}
+
 func (p *ConsolePrinter) Error(err error) {
 	errorColor := color.New(color.FgHiRed, color.Bold).SprintFunc()
 	theError := err.Error()

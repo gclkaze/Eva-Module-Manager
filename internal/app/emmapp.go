@@ -67,6 +67,16 @@ func (inst EMMApp) UploadModule(token string, paths []string,
 	return inst.moduleService.UploadModule(token, paths, params)
 }
 
+func (inst EMMApp) SuggestModuleRelease(token string,
+	params *userinput.ModuleReleaseSuggestionParams) error {
+	return inst.moduleService.SuggestModuleRelease(token, params)
+}
+
+func (inst EMMApp) UpdateModule(token string, paths []string,
+	params *userinput.UploadModuleUpdateParams) error {
+	return inst.moduleService.UpdateModule(token, paths, params)
+}
+
 func (inst EMMApp) GetUserModules(token string) error {
 	return inst.moduleService.GetUserModules(token)
 }
