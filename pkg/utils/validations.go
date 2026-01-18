@@ -14,6 +14,9 @@ var nameRegex = regexp.MustCompile(`^[\p{L}]+([\p{L}\s'-]*[\p{L}]+)?$`)
 var handleRegex = regexp.MustCompile(
 	`^[a-zA-Z][a-zA-Z0-9]*(?:[._-][a-zA-Z0-9]+)*$`,
 )
+var reprRegex = regexp.MustCompile(`^[A-Za-z0-9]+( [A-Za-z0-9]+)*$`)
+var ModuleReprMin = 3
+var ModuleReprMax = 50
 
 var passwordLengthMin = 12
 var passwordLengthMax = 128
@@ -43,6 +46,13 @@ func IsValidName(name string) bool {
 		return false
 	}
 	return nameRegex.MatchString(name)
+}
+
+func IsValidModuleName(moduleName string) bool {
+	if len(moduleName) < ModuleReprMin || len(moduleName) > ModuleReprMax {
+		return false
+	}
+	return reprRegex.MatchString(moduleName)
 }
 
 func IsValidHandle(handle string) bool {

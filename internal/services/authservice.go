@@ -310,6 +310,19 @@ func (inst AuthService) GetActiveUser() (string, error) {
 	return inst.keyringService.LoadToken(inst.currentUserKey)
 }
 
+func (inst AuthService) GetCurrentUserToken() (string, error) {
+	email, err := inst.GetActiveUser()
+	if err != nil {
+		return "", err
+	}
+
+	tl, err := inst.keyringService.LoadToken(email)
+	if err != nil {
+		return "", nil
+	}
+	return strings.Split(tl, " ")[0], nil
+}
+
 func (inst AuthService) ShowCurrentUser() error {
 	active, err := inst.GetActiveUser()
 	if err != nil {

@@ -22,10 +22,12 @@ var application *app.EMMApp
 func initApp() error {
 	moduleSearchService := services.NewModuleSearchService()
 	authService := services.NewAuthService()
+	moduleService := services.NewModuleService()
 
 	application = app.NewEMMApp(
 		moduleSearchService,
 		authService,
+		moduleService,
 		output.NewConsolePrinter(),
 	)
 
@@ -34,6 +36,7 @@ func initApp() error {
 		return err
 	}
 	authService.SetProperties(config.TheConfigReader.GetProperties())
+	moduleService.SetProperties(config.TheConfigReader.GetProperties())
 	return nil
 }
 

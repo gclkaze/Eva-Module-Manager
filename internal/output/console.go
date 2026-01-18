@@ -37,6 +37,10 @@ func (p *ConsolePrinter) Success(msg string) {
 }
 
 func (p ConsolePrinter) PrintModules(mods []models.Module) {
+	if len(mods) == 0 {
+		p.Info("The list of Modules is empty")
+		return
+	}
 	maxRepr := 0
 	for _, m := range mods {
 		if len(m.Repr) > maxRepr {

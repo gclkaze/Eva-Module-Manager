@@ -5,6 +5,7 @@ import (
 	"emm/internal/models/userinput"
 	"emm/internal/output"
 	"emm/internal/services"
+	"fmt"
 	"strings"
 )
 
@@ -14,12 +15,14 @@ type EMMApp struct {
 	authService   *services.AuthService
 	backend       *backend.Backend
 
+	moduleService *services.ModuleService
+
 	onError bool
 }
 
-func NewEMMApp(searchService *services.ModuleSearchService, authService *services.AuthService, output output.Printer) *EMMApp {
+func NewEMMApp(searchService *services.ModuleSearchService, authService *services.AuthService, moduleService *services.ModuleService, output output.Printer) *EMMApp {
 	backend := backend.NewBackend()
-	return &EMMApp{searchService: searchService, authService: authService, output: output, backend: backend, onError: false}
+	return &EMMApp{searchService: searchService, authService: authService, output: output, backend: backend, moduleService: moduleService, onError: false}
 }
 
 func (inst EMMApp) IsOnError() bool {
@@ -41,9 +44,11 @@ func (inst *EMMApp) Init() error {
 
 	inst.authService.SetBackend(inst.backend)
 	inst.searchService.SetBackend(inst.backend)
+	inst.moduleService.SetBackend(inst.backend)
 
 	inst.authService.SetPrinter(inst.output)
 	inst.searchService.SetPrinter(inst.output)
+	inst.moduleService.SetPrinter(inst.output)
 
 	return nil
 }
@@ -57,9 +62,30 @@ func (inst EMMApp) SearchByComponents(name []string, description []string, tags 
 	return err
 }
 
+func (inst EMMApp) UploadModule(token string, paths []string,
+	params *userinput.UploadParams) error {
+	return inst.moduleService.UploadModule(token, paths, params)
+}
+
+func (inst EMMApp) GetUserModules(token string) error {
+	return inst.moduleService.GetUserModules(token)
+}
+
 func (inst EMMApp) UserRegister(creds *userinput.RegistrationCreds) error {
 	_, err := inst.authService.Register(creds)
 	return err
+}
+
+func (inst EMMApp) IsCurrentUserAuthorized() error {
+	_, err := inst.authService.GetActiveUser()
+	if err != nil {
+		return fmt.Errorf("current user needs to be logged on first")
+	}
+	return nil
+}
+
+func (inst EMMApp) GetCurrentUserToken() (string, error) {
+	return inst.authService.GetCurrentUserToken()
 }
 
 func (inst *EMMApp) SwitchCurrentUser(email string) error {
