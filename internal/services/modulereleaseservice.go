@@ -132,7 +132,7 @@ func (inst ModuleReleaseService) FindRelease(token string, module string, versio
 			return nil, err
 		}
 
-		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s%s%s", url, APIGroup, SuperviseGroup, SuperviseFindReleaseEndpoint), nil)
+		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s%s%s/%s/%s", url, APIGroup, SuperviseGroup, SuperviseFindReleaseEndpoint, module, version), nil)
 		if err != nil {
 			return nil, err
 		}
@@ -147,12 +147,12 @@ func (inst ModuleReleaseService) FindRelease(token string, module string, versio
 		}
 		return resp, nil
 	}
-
 	resp, err := inst.authService.PerformSafeCall(token, cb)
 	if err != nil {
 		return nil, err
 	}
 	defer resp.Body.Close()
+
 	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode == http.StatusOK {
 		var response models.RequestResult[models.Release]
@@ -186,13 +186,13 @@ func (inst ModuleReleaseService) ApplyRelease(token string, releaseID uint, verb
 			return nil, err
 		}
 
-		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s%s%s", url, APIGroup, SuperviseGroup, verb), &body)
+		req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s%s%s/%d", url, APIGroup, SuperviseGroup, verb, releaseID), &body)
 		if err != nil {
 			return nil, err
 		}
 
 		req.Header.Set("Accept", "application/json")
-		req.Header.Set("Authorization", "Bearer "+token)
+		req.Header.Set("Authorization", "Bearer "+theToken)
 		req.Header.Set("Content-Type", writer.FormDataContentType())
 
 		resp, err := http.DefaultClient.Do(req)
@@ -216,7 +216,8 @@ func (inst ModuleReleaseService) ApplyRelease(token string, releaseID uint, verb
 			inst.output.Error(err)
 			return err
 		}
-		inst.output.Error(fmt.Errorf("%s", response.Details))
+		err = fmt.Errorf("%s", response.Details)
+		inst.output.Error(err)
 		return err
 	}
 	return err

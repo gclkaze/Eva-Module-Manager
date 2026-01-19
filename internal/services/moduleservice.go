@@ -81,29 +81,36 @@ func (inst *ModuleService) SuggestModuleRelease(token string, params *userinput.
 		inst.output.Error(fmt.Errorf("coulnd't find user module: '%s'", params.ModuleRepr))
 		return nil
 	}
+	cb := func(theToken string) (*http.Response, error) {
+		var body bytes.Buffer
+		writer := multipart.NewWriter(&body)
 
-	var body bytes.Buffer
-	writer := multipart.NewWriter(&body)
+		_ = writer.WriteField("modId", utils.UintToString(m.ID))
+		_ = writer.WriteField("version", params.Version)
+		writer.Close()
 
-	_ = writer.WriteField("modId", utils.UintToString(m.ID))
-	_ = writer.WriteField("version", params.Version)
-	writer.Close()
+		url, err := inst.backend.GetServerURL()
+		if err != nil {
+			return nil, err
+		}
 
-	url, err := inst.backend.GetServerURL()
-	if err != nil {
-		return err
+		req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s%s%s", url, APIGroup, ModulesGroup, ModuleSuggestEndpoint), &body)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Authorization", "Bearer "+theToken)
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		return resp, nil
 	}
 
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s%s%s", url, APIGroup, ModulesGroup, ModuleSuggestEndpoint), &body)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token)
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := inst.authService.PerformSafeCall(token, cb)
 	if err != nil {
 		return err
 	}
@@ -126,21 +133,28 @@ func (inst *ModuleService) SuggestModuleRelease(token string, params *userinput.
 }
 
 func (inst ModuleService) GetUserModulesList(token string) ([]models.Module, error) {
-	url, err := inst.backend.GetServerURL()
-	if err != nil {
-		return nil, err
+	cb := func(theToken string) (*http.Response, error) {
+		url, err := inst.backend.GetServerURL()
+		if err != nil {
+			return nil, err
+		}
+
+		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s%s%s", url, APIGroup, ModulesGroup, GetUserModulesEndpoint), nil)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Authorization", "Bearer "+theToken)
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		return resp, nil
 	}
-
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s%s%s", url, APIGroup, ModulesGroup, GetUserModulesEndpoint), nil)
-	if err != nil {
-		return nil, err
-	}
-
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := inst.authService.PerformSafeCall(token, cb)
 	if err != nil {
 		return nil, err
 	}
@@ -165,21 +179,28 @@ func (inst ModuleService) GetUserModulesList(token string) ([]models.Module, err
 }
 
 func (inst ModuleService) GetUserModules(token string) error {
-	url, err := inst.backend.GetServerURL()
-	if err != nil {
-		return err
+	cb := func(theToken string) (*http.Response, error) {
+		url, err := inst.backend.GetServerURL()
+		if err != nil {
+			return nil, err
+		}
+
+		req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s%s%s", url, APIGroup, ModulesGroup, GetUserModulesEndpoint), nil)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Authorization", "Bearer "+theToken)
+
+		client := &http.Client{}
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		return resp, nil
 	}
-
-	req, err := http.NewRequest(http.MethodGet, fmt.Sprintf("%s%s%s%s", url, APIGroup, ModulesGroup, GetUserModulesEndpoint), nil)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token)
-
-	client := &http.Client{}
-	resp, err := client.Do(req)
+	resp, err := inst.authService.PerformSafeCall(token, cb)
 	if err != nil {
 		return err
 	}
@@ -248,40 +269,47 @@ func (inst *ModuleService) validateAndUpdateModule(token string, paths []string,
 		)
 	}
 
-	// Step 4: build multipart request with all files
-	var body bytes.Buffer
-	writer := multipart.NewWriter(&body)
+	cb := func(theToken string) (*http.Response, error) {
 
-	_ = writer.WriteField("title", params.Title)
-	_ = writer.WriteField("repr", params.Repr)
-	_ = writer.WriteField("tags", params.Tags)
-	_ = writer.WriteField("description", params.Description)
-	_ = writer.WriteField("modId", utils.UintToString(m.ID))
+		var body bytes.Buffer
+		writer := multipart.NewWriter(&body)
 
-	for _, f := range files {
-		if err := inst.addFile(writer, "file", f); err != nil {
-			return err
+		_ = writer.WriteField("title", params.Title)
+		_ = writer.WriteField("repr", params.Repr)
+		_ = writer.WriteField("tags", params.Tags)
+		_ = writer.WriteField("description", params.Description)
+		_ = writer.WriteField("modId", utils.UintToString(m.ID))
+
+		for _, f := range files {
+			if err := inst.addFile(writer, "file", f); err != nil {
+				return nil, err
+			}
 		}
+
+		writer.Close()
+
+		url, err := inst.backend.GetServerURL()
+		if err != nil {
+			return nil, err
+		}
+
+		req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s%s%s", url, APIGroup, ModulesGroup, ModuleUpdateEndpoint), &body)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Authorization", "Bearer "+theToken)
+		// Step 5: POST once
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		return resp, nil
 	}
-
-	writer.Close()
-
-	url, err := inst.backend.GetServerURL()
-	if err != nil {
-		return err
-	}
-
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s%s%s", url, APIGroup, ModulesGroup, ModuleUpdateEndpoint), &body)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token)
-	// Step 5: POST once
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := inst.authService.PerformSafeCall(token, cb)
 	if err != nil {
 		return err
 	}
@@ -356,27 +384,33 @@ func (inst *ModuleService) validateAndUploadAll(token string, paths []string, pa
 
 	writer.Close()
 
-	url, err := inst.backend.GetServerURL()
-	if err != nil {
-		return err
+	cb := func(theToken string) (*http.Response, error) {
+		url, err := inst.backend.GetServerURL()
+		if err != nil {
+			return nil, err
+		}
+
+		req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s%s%s", url, APIGroup, ModulesGroup, ModuleUploadEndpoint), &body)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Accept", "application/json")
+		req.Header.Set("Authorization", "Bearer "+theToken)
+		// Step 5: POST once
+		req.Header.Set("Content-Type", writer.FormDataContentType())
+
+		resp, err := http.DefaultClient.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		return resp, nil
 	}
-
-	req, err := http.NewRequest(http.MethodPost, fmt.Sprintf("%s%s%s%s", url, APIGroup, ModulesGroup, ModuleUploadEndpoint), &body)
-	if err != nil {
-		return err
-	}
-
-	req.Header.Set("Accept", "application/json")
-	req.Header.Set("Authorization", "Bearer "+token)
-	// Step 5: POST once
-	req.Header.Set("Content-Type", writer.FormDataContentType())
-
-	resp, err := http.DefaultClient.Do(req)
+	resp, err := inst.authService.PerformSafeCall(token, cb)
 	if err != nil {
 		return err
 	}
 	defer resp.Body.Close()
-
 	if resp.StatusCode != http.StatusOK {
 		var response models.ErrorResult
 		b, _ := io.ReadAll(resp.Body)
