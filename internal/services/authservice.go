@@ -163,8 +163,66 @@ func (inst AuthService) getRefreshToken(email string) (string, error) {
 	return toks[1], nil
 }
 
+func (inst AuthService) getAccessToken(email string) (string, error) {
+	tk, err := inst.keyringService.LoadToken(email)
+	if err != nil {
+		return "", nil
+	}
+
+	toks := strings.Split(tk, " ")
+	if len(toks) != 2 {
+		return "", errors.New("incorrect token format")
+	}
+	return toks[0], nil
+}
+
 func (inst AuthService) combineToken(resp models.LoginResponse) string {
 	return fmt.Sprintf("%s %s", resp.AccessToken, resp.RefreshToken)
+}
+
+func (inst *AuthService) PerformSafeCall(theToken string, request func(token string) (*http.Response, error)) (*http.Response, error) {
+	resp, err := request(theToken)
+	if err != nil {
+		return nil, err
+	}
+	if resp.StatusCode == http.StatusUnauthorized {
+		if resp.Body != nil {
+			io.Copy(io.Discard, resp.Body)
+			resp.Body.Close()
+		}
+		u, err := inst.GetActiveUser()
+		if err != nil {
+			return nil, err
+		}
+		succ, err := inst.refreshToken(u)
+		if err != nil {
+			return nil, err
+		}
+		if !succ {
+			return nil, fmt.Errorf("couldn't refresh access token..try to login manually")
+		}
+		newTok, err := inst.getAccessToken(u)
+		if err != nil {
+			return nil, err
+		}
+		resp, err = request(newTok)
+		if err != nil {
+			return nil, err
+		}
+		if resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusUnauthorized {
+			return nil, fmt.Errorf("cannot access resource")
+		}
+		return resp, err
+	}
+
+	if resp.StatusCode == http.StatusForbidden || resp.StatusCode == http.StatusUnauthorized {
+		if resp.Body != nil {
+			io.Copy(io.Discard, resp.Body)
+			resp.Body.Close()
+		}
+		return nil, fmt.Errorf("cannot access resource")
+	}
+	return resp, err
 }
 
 func (inst *AuthService) refreshToken(email string) (bool, error) {

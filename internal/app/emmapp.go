@@ -15,14 +15,15 @@ type EMMApp struct {
 	authService   *services.AuthService
 	backend       *backend.Backend
 
-	moduleService *services.ModuleService
+	moduleService  *services.ModuleService
+	releaseService *services.ModuleReleaseService
 
 	onError bool
 }
 
-func NewEMMApp(searchService *services.ModuleSearchService, authService *services.AuthService, moduleService *services.ModuleService, output output.Printer) *EMMApp {
+func NewEMMApp(searchService *services.ModuleSearchService, authService *services.AuthService, moduleService *services.ModuleService, releaseService *services.ModuleReleaseService, output output.Printer) *EMMApp {
 	backend := backend.NewBackend()
-	return &EMMApp{searchService: searchService, authService: authService, output: output, backend: backend, moduleService: moduleService, onError: false}
+	return &EMMApp{searchService: searchService, authService: authService, output: output, backend: backend, moduleService: moduleService, releaseService: releaseService, onError: false}
 }
 
 func (inst EMMApp) IsOnError() bool {
@@ -45,10 +46,12 @@ func (inst *EMMApp) Init() error {
 	inst.authService.SetBackend(inst.backend)
 	inst.searchService.SetBackend(inst.backend)
 	inst.moduleService.SetBackend(inst.backend)
+	inst.releaseService.SetBackend(inst.backend)
 
 	inst.authService.SetPrinter(inst.output)
 	inst.searchService.SetPrinter(inst.output)
 	inst.moduleService.SetPrinter(inst.output)
+	inst.releaseService.SetPrinter(inst.output)
 
 	return nil
 }
@@ -128,4 +131,19 @@ func (inst EMMApp) SearchByQuery(query string) error {
 
 func (inst EMMApp) GetModuleInfo(query string) error {
 	return inst.searchService.GetModuleInfo(query)
+}
+func (inst EMMApp) AcceptRelease(token string, module string, version string) error {
+	return inst.releaseService.AcceptRelease(token, module, version)
+}
+
+func (inst EMMApp) CancelRelease(token string, module string, version string) error {
+	return inst.releaseService.CancelRelease(token, module, version)
+}
+
+func (inst EMMApp) LowerRelease(token string, module string, version string) error {
+	return inst.releaseService.LowerRelease(token, module, version)
+}
+
+func (inst EMMApp) RejectRelease(token string, module string, version string) error {
+	return inst.releaseService.RejectRelease(token, module, version)
 }

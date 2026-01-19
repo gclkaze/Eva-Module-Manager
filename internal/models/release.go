@@ -8,6 +8,6 @@ type Release struct {
 	ReleasedAt  *time.Time `json:"released_at" binding:"required"`
 	Description string     `json:"description" binding:"required"`
 	DiskSize    int64      `json:"diskSize" binding:"required"`
-
-	Keywords []Keyword `json:"keywords" binding:"required"`
+	Status      string     `json:"status" binding:"required"`
+	Keywords    []Keyword  `json:"keywords" binding:"required"`
 }

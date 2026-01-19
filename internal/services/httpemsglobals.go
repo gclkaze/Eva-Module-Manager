@@ -27,6 +27,7 @@ const (
 
 	SuperviseGroup                      = "/supervise"
 	SuperviseDownloadAnyReleaseEndpoint = "/download/release"
+	SuperviseFindReleaseEndpoint        = "/find/release"
 	SuperviseRejectReleaseEndpoint      = "/reject/release"
 	SuperviseAcceptReleaseEndpoint      = "/accept/release"
 	SuperviseCancelReleaseEndpoint      = "/cancel/release"

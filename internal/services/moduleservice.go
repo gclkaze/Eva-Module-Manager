@@ -20,15 +20,15 @@ import (
 )
 
 type ModuleService struct {
-	backend *backend.Backend
-	output  output.Printer
-	props   *properties.Properties
-
+	backend       *backend.Backend
+	output        output.Printer
+	props         *properties.Properties
+	authService   *AuthService
 	maxUploadSize int64
 }
 
-func NewModuleService() *ModuleService {
-	return &ModuleService{}
+func NewModuleService(auth *AuthService) *ModuleService {
+	return &ModuleService{authService: auth}
 }
 
 func (inst *ModuleService) SetProperties(props *properties.Properties) {
