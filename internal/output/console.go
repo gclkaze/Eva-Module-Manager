@@ -40,6 +40,122 @@ func (p *ConsolePrinter) Success(msg string) {
 	successColor := color.New(color.FgHiGreen, color.Bold).SprintFunc()
 	fmt.Fprintln(os.Stderr, successColor(msg))
 }
+func (p ConsolePrinter) PrintReleaseRows(mods []models.ModuleEnrichedDTO) {
+	if len(mods) == 0 {
+		color.New(color.FgHiBlack).Println("No releases found.")
+		return
+	}
+
+	// Flatten: one row per module@version
+	type row struct {
+		ModuleRepr string
+		RepoName   string
+		Release    models.ReleaseDTO
+	}
+
+	rows := make([]row, 0, 64)
+	for _, m := range mods {
+		for _, r := range m.ReleaseInfo {
+			rows = append(rows, row{
+				ModuleRepr: m.Repr,
+				RepoName:   m.RepoName,
+				Release:    r,
+			})
+		}
+	}
+
+	if len(rows) == 0 {
+		color.New(color.FgHiBlack).Println("No releases found.")
+		return
+	}
+
+	// Colors
+	hdr := color.New(color.FgHiBlack, color.Bold).SprintFunc()
+	moduleC := color.New(color.FgGreen).SprintFunc()
+	white := color.New(color.FgWhite).SprintFunc()
+	meta := color.New(color.FgHiBlack).SprintFunc()
+
+	// Column widths (ASCII-aligned)
+	const (
+		wModule  = 22
+		wID      = 30
+		wStatus  = 10
+		wRelTime = 16
+		wSize    = 10
+		wTags    = 22
+		wDesc    = 34
+	)
+
+	// Header
+	fmt.Printf(
+		"%s  %s  %s  %s  %s  %s  %s\n",
+		padRight(hdr("MODULE"), wModule),
+		padRight(hdr("REPO@VERSION"), wID),
+		padRight(hdr("STATUS"), wStatus),
+		padRight(hdr("RELEASED"), wRelTime),
+		padRight(hdr("SIZE"), wSize),
+		padRight(hdr("TAGS"), wTags),
+		padRight(hdr("DESCRIPTION"), wDesc),
+	)
+
+	fmt.Println(strings.Repeat("-", wModule+wID+wStatus+wRelTime+wSize+wTags+wDesc+12))
+
+	// Rows
+	for _, x := range rows {
+		r := x.Release
+
+		copyID := fmt.Sprintf("%s@%s", x.RepoName /*normalizeVersion*/, (r.Version))
+
+		released := "-"
+		if r.ReleasedAt != nil {
+			released = r.ReleasedAt.Format("2006-01-02 15:04")
+		}
+
+		// Keywords -> comma separated labels
+		tagLabels := make([]string, 0, len(r.Keywords))
+		for _, k := range r.Keywords {
+			tagLabels = append(tagLabels, k.Label)
+		}
+		tags := truncate(strings.Join(tagLabels, ","), wTags)
+
+		desc := truncate(r.Description, wDesc)
+
+		statusFn := statusColorFunc(r.Status)
+
+		fmt.Printf(
+			"%s  %s  %s  %s  %s  %s  %s\n",
+			padRight(moduleC(truncate(x.ModuleRepr, wModule)), wModule),
+			padRight(white(truncate(copyID, wID)), wID), // white copy-paste string
+			padRight(statusFn(truncate(r.Status, wStatus)), wStatus),
+			padRight(meta(truncate(released, wRelTime)), wRelTime),
+			padRight(meta(truncate(humanSize(r.DiskSize), wSize)), wSize),
+			padRight(meta(tags), wTags),
+			padRight(meta(desc), wDesc),
+		)
+	}
+}
+
+// NOTE: These are byte-based; good for ASCII module names.
+// If you need proper unicode width alignment, use a runewidth implementation.
+func padRight(s string, width int) string {
+	if len(s) >= width {
+		return s
+	}
+	return s + strings.Repeat(" ", width-len(s))
+}
+
+func truncate(s string, max int) string {
+	if max <= 0 {
+		return ""
+	}
+	if len(s) <= max {
+		return s
+	}
+	if max <= 1 {
+		return s[:max]
+	}
+	return s[:max-1] + "…"
+}
 
 func (p ConsolePrinter) PrintDetailedModuleReleaseInfo(mods []models.ModuleEnrichedDTO) {
 	if len(mods) == 0 {

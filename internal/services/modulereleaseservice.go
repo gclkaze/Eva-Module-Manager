@@ -127,14 +127,19 @@ func (inst *ModuleReleaseService) RejectRelease(token string, module string, ver
 	return nil
 }
 
-func (inst ModuleReleaseService) ReleaseDump(token string, filter *userinput.ReleaseFilterParams) error {
+func (inst ModuleReleaseService) ReleaseDump(token string, filter *userinput.ReleaseFilterParams, view string) error {
 	modules, err := inst.GetFilteredModuleReleases(token, filter)
 	if err != nil {
 		inst.output.Error(err)
 		return nil
 	}
 
-	inst.output.PrintDetailedModuleReleaseInfo(modules)
+	if view == "rows" {
+		inst.output.PrintReleaseRows(modules)
+	} else {
+		inst.output.PrintDetailedModuleReleaseInfo(modules)
+
+	}
 	return nil
 }
 func (inst ModuleReleaseService) GetFilteredModuleReleases(token string, p *userinput.ReleaseFilterParams) ([]models.ModuleEnrichedDTO, error) {

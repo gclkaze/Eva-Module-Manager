@@ -12,4 +12,5 @@ type Printer interface {
 	PrintReleaseInfo(moduleRepr string, r models.Release)
 
 	PrintDetailedModuleReleaseInfo(mods []models.ModuleEnrichedDTO)
+	PrintReleaseRows(mods []models.ModuleEnrichedDTO)
 }

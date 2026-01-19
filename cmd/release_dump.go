@@ -12,6 +12,7 @@ var (
 	releaseFilter    = userinput.NewReleaseFilterParams()
 	createdAfterStr  string
 	releasedAfterStr string
+	outputView       string
 )
 
 var releaseDumpCmd = &cobra.Command{
@@ -21,12 +22,18 @@ var releaseDumpCmd = &cobra.Command{
 		return bindReleaseFilterTimes()
 	},
 	RunE: func(cmd *cobra.Command, args []string) error {
+		switch outputView {
+		case "detailed", "rows":
+			// ok
+		default:
+			return fmt.Errorf("invalid view %q (allowed: detailed, rows)", outputView)
+		}
 		token, err := application.GetCurrentUserToken()
 		if err != nil {
 			application.GetPrinter().Error(err)
 			return nil
 		}
-		err = application.ReleaseDump(token, releaseFilter)
+		err = application.ReleaseDump(token, releaseFilter, outputView)
 		if err != nil {
 			application.GetPrinter().Error(err)
 		}
@@ -37,6 +44,20 @@ var releaseDumpCmd = &cobra.Command{
 func init() {
 	releaseCmd.AddCommand(releaseDumpCmd)
 	releaseFilter = userinput.NewReleaseFilterParams()
+
+	releaseDumpCmd.Flags().StringVarP(
+		&outputView,
+		"view",
+		"f",
+		"detailed",
+		"Output view: detailed | rows",
+	)
+
+	_ = releaseDumpCmd.RegisterFlagCompletionFunc(
+		"view",
+		cobra.FixedCompletions([]string{"detailed", "rows"}, cobra.ShellCompDirectiveNoFileComp),
+	)
+
 	f := releaseDumpCmd.Flags()
 
 	// []string fields

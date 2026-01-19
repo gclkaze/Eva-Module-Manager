@@ -148,6 +148,6 @@ func (inst EMMApp) RejectRelease(token string, module string, version string) er
 	return inst.releaseService.RejectRelease(token, module, version)
 }
 
-func (inst EMMApp) ReleaseDump(token string, filter *userinput.ReleaseFilterParams) error {
-	return inst.releaseService.ReleaseDump(token, filter)
+func (inst EMMApp) ReleaseDump(token string, filter *userinput.ReleaseFilterParams, view string) error {
+	return inst.releaseService.ReleaseDump(token, filter, view)
 }
