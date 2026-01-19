@@ -41,6 +41,121 @@ func (p *ConsolePrinter) Success(msg string) {
 	fmt.Fprintln(os.Stderr, successColor(msg))
 }
 
+func (p ConsolePrinter) PrintDetailedModuleReleaseInfo(mods []models.ModuleEnrichedDTO) {
+	if len(mods) == 0 {
+		color.New(color.FgHiBlack).Println("No releases found.")
+		return
+	}
+
+	// colors
+	moduleTitle := color.New(color.FgGreen, color.Bold).SprintFunc()
+	moduleMeta := color.New(color.FgHiBlack).SprintFunc()
+	releaseTitle := color.New(color.FgCyan, color.Bold).SprintFunc()
+	label := color.New(color.FgHiBlack).SprintFunc()
+	value := color.New(color.FgWhite).SprintFunc()
+	tagColor := color.New(color.FgYellow).SprintFunc()
+	indexColor := color.New(color.FgHiBlack).SprintFunc()
+
+	// header summary
+	fmt.Println(indexColor(fmt.Sprintf("Modules: %d", len(mods))))
+	fmt.Println()
+
+	for mi, m := range mods {
+		// ---- Module header ----
+		fmt.Println(indexColor(fmt.Sprintf("[%d/%d] ", mi+1, len(mods))) +
+			moduleTitle(m.Repr) + " " +
+			moduleMeta(fmt.Sprintf("(%s)", m.RepoName)),
+		)
+
+		fmt.Println(label("Title:      "), value(m.Title))
+		fmt.Println(label("Description:"), value(m.Description))
+
+		if len(m.Tags) > 0 {
+			fmt.Println(label("Tags:       "), tagColor(strings.Join(m.Tags, ", ")))
+		}
+
+		relCount := len(m.ReleaseInfo)
+		fmt.Println(label("Releases:   "), value(fmt.Sprintf("%d", relCount)))
+		fmt.Println(strings.Repeat("-", 60))
+
+		// ---- Releases ----
+		if relCount == 0 {
+			fmt.Println(indexColor("No releases for this module."))
+			fmt.Println()
+			continue
+		}
+
+		for ri, r := range m.ReleaseInfo {
+			statusFn := statusColorFunc(r.Status)
+
+			copyID := fmt.Sprintf("%s@%s", m.RepoName, normalizeVersion(r.Version))
+
+			fmt.Println(
+				indexColor(fmt.Sprintf("  (%d/%d) ", ri+1, relCount)) +
+					releaseTitle("Version:") + " " +
+					value(r.Version) + " " +
+					color.New(color.FgWhite).SprintFunc()(copyID),
+			)
+
+			fmt.Println(label("    Status:     "), statusFn(r.Status))
+
+			if r.ReleasedAt != nil {
+				fmt.Println(label("    Released at:"), value(r.ReleasedAt.Format("2006-01-02 15:04")))
+			}
+
+			fmt.Println(label("    Size:       "), value(humanSize(r.DiskSize)))
+			fmt.Println(label("    Description:"), value(r.Description))
+
+			if len(r.Keywords) > 0 {
+				kws := make([]string, 0, len(r.Keywords))
+				for _, k := range r.Keywords {
+					kws = append(kws, k.Label)
+				}
+				fmt.Println(label("    Keywords:   "), tagColor(strings.Join(kws, ", ")))
+			}
+
+			fmt.Println()
+		}
+
+		fmt.Println()
+	}
+}
+func normalizeVersion(v string) string {
+	if len(v) > 0 && (v[0] == 'v' || v[0] == 'V') {
+		return v[1:]
+	}
+	return v
+}
+func humanSize(bytes int64) string {
+	const unit = 1024
+	if bytes < unit {
+		return fmt.Sprintf("%d B", bytes)
+	}
+	div, exp := int64(unit), 0
+	for n := bytes / unit; n >= unit; n /= unit {
+		div *= unit
+		exp++
+	}
+	return fmt.Sprintf("%.1f %cB", float64(bytes)/float64(div), "KMGTPE"[exp])
+}
+
+func statusColorFunc(status string) func(a ...interface{}) string {
+	switch strings.ToLower(status) {
+	case "draft":
+		return color.New(color.FgHiBlack).SprintFunc()
+	case "pending":
+		return color.New(color.FgYellow).SprintFunc()
+	case "accepted":
+		return color.New(color.FgGreen, color.Bold).SprintFunc()
+	case "rejected":
+		return color.New(color.FgRed, color.Bold).SprintFunc()
+	case "canceled", "cancelled":
+		return color.New(color.FgMagenta).SprintFunc()
+	default:
+		return color.New(color.FgWhite).SprintFunc()
+	}
+}
+
 func (p ConsolePrinter) PrintModules(mods []models.Module) {
 	if len(mods) == 0 {
 		p.Info("The list of Modules is empty")

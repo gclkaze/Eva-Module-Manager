@@ -10,4 +10,6 @@ type Printer interface {
 	PrintModules(mod []models.Module)
 	PrintModuleInfo(m models.ModuleEnrichedInformation)
 	PrintReleaseInfo(moduleRepr string, r models.Release)
+
+	PrintDetailedModuleReleaseInfo(mods []models.ModuleEnrichedDTO)
 }
