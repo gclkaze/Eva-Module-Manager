@@ -13,6 +13,14 @@ import (
 
 type ConsolePrinter struct{}
 
+// Flatten: one row per module@version
+type row struct {
+	ModuleRepr string
+	RepoName   string
+	Release    models.ReleaseDTO
+	Tags       []string
+}
+
 func NewConsolePrinter() *ConsolePrinter {
 	return &ConsolePrinter{}
 }
@@ -46,13 +54,6 @@ func (p ConsolePrinter) PrintReleaseRows(mods []models.ModuleEnrichedDTO) {
 		return
 	}
 
-	// Flatten: one row per module@version
-	type row struct {
-		ModuleRepr string
-		RepoName   string
-		Release    models.ReleaseDTO
-	}
-
 	rows := make([]row, 0, 64)
 	for _, m := range mods {
 		for _, r := range m.ReleaseInfo {
@@ -60,6 +61,7 @@ func (p ConsolePrinter) PrintReleaseRows(mods []models.ModuleEnrichedDTO) {
 				ModuleRepr: m.Repr,
 				RepoName:   m.RepoName,
 				Release:    r,
+				Tags:       m.Tags,
 			})
 		}
 	}
@@ -77,34 +79,35 @@ func (p ConsolePrinter) PrintReleaseRows(mods []models.ModuleEnrichedDTO) {
 
 	// Column widths (ASCII-aligned)
 	const (
-		wModule  = 22
-		wID      = 30
-		wStatus  = 10
+		wStatus  = 8
 		wRelTime = 16
-		wSize    = 10
+		wSize    = 6
 		wTags    = 22
-		wDesc    = 34
+		wDescMax = 80 // description max only (no fixed width)
 	)
 
-	// Header
+	wModule := clamp(geModuleNameMaxColumnLength(rows), 10, 60)
+	wID := clamp(getRepoVersionMaxColumnLength(rows), 10, 80)
+
 	fmt.Printf(
 		"%s  %s  %s  %s  %s  %s  %s\n",
-		padRight(hdr("MODULE"), wModule),
-		padRight(hdr("REPO@VERSION"), wID),
-		padRight(hdr("STATUS"), wStatus),
-		padRight(hdr("RELEASED"), wRelTime),
-		padRight(hdr("SIZE"), wSize),
-		padRight(hdr("TAGS"), wTags),
-		padRight(hdr("DESCRIPTION"), wDesc),
+		hdr(fixedWidthTrunc("MODULE", wModule)),
+		hdr(fixedWidthTrunc("REPO@VERSION", wID)),
+		hdr(fixedWidthTrunc("STATUS", wStatus)),
+		hdr(fixedWidthTrunc("RELEASED", wRelTime)),
+		hdr(fixedWidthTrunc("SIZE", wSize)),
+		hdr(fixedWidthTrunc("TAGS", wTags)),
+		hdr("DESCRIPTION"), // no fixed width
 	)
-
-	fmt.Println(strings.Repeat("-", wModule+wID+wStatus+wRelTime+wSize+wTags+wDesc+12))
+	fixedColsWidth := wModule + wID + wStatus + wRelTime + wSize + wTags
+	gaps := 2 * 6 // two spaces between 7 columns -> 6 gaps before DESCRIPTION
+	fmt.Println(strings.Repeat("-", fixedColsWidth+gaps))
 
 	// Rows
 	for _, x := range rows {
 		r := x.Release
 
-		copyID := fmt.Sprintf("%s@%s", x.RepoName /*normalizeVersion*/, (r.Version))
+		copyID := fmt.Sprintf("%s@%s", x.RepoName, normalizeVersion(r.Version))
 
 		released := "-"
 		if r.ReleasedAt != nil {
@@ -116,23 +119,93 @@ func (p ConsolePrinter) PrintReleaseRows(mods []models.ModuleEnrichedDTO) {
 		for _, k := range r.Keywords {
 			tagLabels = append(tagLabels, k.Label)
 		}
-		tags := truncate(strings.Join(tagLabels, ","), wTags)
 
-		desc := truncate(r.Description, wDesc)
+		tagLabels = append(tagLabels, x.Tags...)
+
+		tags := truncate(strings.Join(tagLabels, ","), wTags)
 
 		statusFn := statusColorFunc(r.Status)
 
+		moduleStr := fixedWidthTrunc(truncate(x.ModuleRepr, wModule), wModule)
+		idStr := fixedWidthTrunc(truncate(copyID, wID), wID)
+		statusStr := fixedWidthTrunc(truncate(r.Status, wStatus), wStatus)
+		releasedStr := fixedWidthTrunc(truncate(released, wRelTime), wRelTime)
+		sizeStr := fixedWidthTrunc(truncate(humanSize(r.DiskSize), wSize), wSize)
+		tagsStr := fixedWidthTrunc(truncMax(tags, wTags), wTags) // fixed width
+		descStr := truncMax(r.Description, wDescMax)             // max 50 only
+
 		fmt.Printf(
 			"%s  %s  %s  %s  %s  %s  %s\n",
-			padRight(moduleC(truncate(x.ModuleRepr, wModule)), wModule),
-			padRight(white(truncate(copyID, wID)), wID), // white copy-paste string
-			padRight(statusFn(truncate(r.Status, wStatus)), wStatus),
-			padRight(meta(truncate(released, wRelTime)), wRelTime),
-			padRight(meta(truncate(humanSize(r.DiskSize), wSize)), wSize),
-			padRight(meta(tags), wTags),
-			padRight(meta(desc), wDesc),
+			moduleC(moduleStr),
+			white(idStr),
+			statusFn(statusStr),
+			meta(releasedStr),
+			meta(sizeStr),
+			meta(tagsStr),
+			meta(descStr),
 		)
+
 	}
+}
+
+func getRepoVersionMaxColumnLength(rows []row) int {
+	max := 0
+	for i := range rows {
+		s := fmt.Sprintf("%s@%s", rows[i].RepoName, normalizeVersion(rows[i].Release.Version))
+		l := len(s)
+		if l > max {
+			max = l
+		}
+	}
+	return max
+}
+
+func geModuleNameMaxColumnLength(rows []row) int {
+	max := 0
+	for i := range rows {
+		l := len(rows[i].ModuleRepr)
+		if l > max {
+			max = l
+		}
+	}
+	return max
+}
+
+func clamp(n, min, max int) int {
+	if n < min {
+		return min
+	}
+	if n > max {
+		return max
+	}
+	return n
+}
+
+func fixedWidthTrunc(s string, width int) string {
+	if len(s) > width {
+		s = s[:width]
+	}
+	if len(s) < width {
+		s += strings.Repeat(" ", width-len(s))
+	}
+	return s
+}
+
+func truncMax(s string, max int) string {
+	if max <= 0 || len(s) <= max {
+		return s
+	}
+	if max == 1 {
+		return s[:1]
+	}
+	return s[:max-1] + "…"
+}
+
+func fixedWidth(s string, width int) string {
+	if len(s) > width {
+		return s[:width]
+	}
+	return s + strings.Repeat(" ", width-len(s))
 }
 
 // NOTE: These are byte-based; good for ASCII module names.
