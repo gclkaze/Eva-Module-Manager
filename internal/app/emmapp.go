@@ -1,6 +1,7 @@
 package app
 
 import (
+	"context"
 	"emm/internal/backend"
 	"emm/internal/models/userinput"
 	"emm/internal/output"
@@ -18,12 +19,17 @@ type EMMApp struct {
 	moduleService  *services.ModuleService
 	releaseService *services.ModuleReleaseService
 
-	onError bool
+	saveLocation string
+	onError      bool
 }
 
 func NewEMMApp(searchService *services.ModuleSearchService, authService *services.AuthService, moduleService *services.ModuleService, releaseService *services.ModuleReleaseService, output output.Printer) *EMMApp {
 	backend := backend.NewBackend()
 	return &EMMApp{searchService: searchService, authService: authService, output: output, backend: backend, moduleService: moduleService, releaseService: releaseService, onError: false}
+}
+
+func (inst EMMApp) GetDefaultFileStorageLocation() string {
+	return inst.saveLocation
 }
 
 func (inst EMMApp) IsOnError() bool {
@@ -52,6 +58,8 @@ func (inst *EMMApp) Init() error {
 	inst.searchService.SetPrinter(inst.output)
 	inst.moduleService.SetPrinter(inst.output)
 	inst.releaseService.SetPrinter(inst.output)
+
+	inst.saveLocation = inst.backend.GetDefaultFileStorageLocation()
 
 	return nil
 }
@@ -150,4 +158,8 @@ func (inst EMMApp) RejectRelease(token string, module string, version string) er
 
 func (inst EMMApp) ReleaseDump(token string, filter *userinput.ReleaseFilterParams, view string) error {
 	return inst.releaseService.ReleaseDump(token, filter, view)
+}
+
+func (inst EMMApp) DownloadRelease(ctx context.Context, token string, module string, version string, saveLocation string) error {
+	return inst.releaseService.DownloadRelease(ctx, token, module, version, saveLocation)
 }

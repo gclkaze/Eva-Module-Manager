@@ -23,6 +23,10 @@ func (b *Backend) InitFromPath(path string) error {
 	return b.readCondigurationFromPath(path)
 }
 
+func (b Backend) GetDefaultFileStorageLocation() string {
+	return b.properties.GetString("save_folder_location", ".")
+}
+
 func (b *Backend) readCondiguration() error {
 	config.Init()
 

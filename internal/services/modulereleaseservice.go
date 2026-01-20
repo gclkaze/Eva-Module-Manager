@@ -2,6 +2,7 @@ package services
 
 import (
 	"bytes"
+	"context"
 	"emm/internal/backend"
 	"emm/internal/models"
 	"emm/internal/models/userinput"
@@ -13,9 +14,12 @@ import (
 	"mime/multipart"
 	"net/http"
 	"net/url"
+	"os"
+	"path/filepath"
 	"time"
 
 	"github.com/magiconair/properties"
+	"github.com/schollz/progressbar/v3"
 )
 
 type ModuleReleaseService struct {
@@ -127,6 +131,125 @@ func (inst *ModuleReleaseService) RejectRelease(token string, module string, ver
 	return nil
 }
 
+func (inst ModuleReleaseService) DownloadRelease(ctx context.Context, token string, module string, version string, saveLocation string) error {
+	var err error
+	if token == "" {
+		err = inst.downloadPublicRelease(ctx, module, version, saveLocation)
+	} else {
+		err = inst.downloadRelease(ctx, token, module, version, saveLocation)
+	}
+	if err != nil {
+		inst.output.Error(err)
+	} else {
+		inst.output.Info(fmt.Sprintf("✅ Module %s was downloaded successfully at %s", inst.getModuleTarBallName(module, version), saveLocation))
+	}
+	return nil
+}
+
+func (inst ModuleReleaseService) downloadPublicRelease(ctx context.Context, module string, version string, saveLocation string) error {
+	url, err := inst.backend.GetServerURL()
+	if err != nil {
+		return err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s%s%s%s%s@%s", url, APIGroup, DownloadGroup, "/release/", module, version), nil)
+	if err != nil {
+		return err
+	}
+
+	req.Header.Set("Accept", "application/octet-stream")
+
+	client := &http.Client{Timeout: 0}
+	resp, err := client.Do(req)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+	saveAs := inst.getModuleTarBallName(module, version)
+	return inst.StoreRelease(resp, saveLocation, saveAs)
+}
+
+func (inst ModuleReleaseService) getModuleTarBallName(module string, version string) string {
+	return fmt.Sprintf("%s-%s.tar.gz", module, version)
+}
+
+/*
+download.GET("/release/:release", router.downloadHandler.DownloadPublicRelease)
+download.GET("/auth/release/:release", router.middleWare.AuthMiddleware(be.GetJWTSecret()), router.downloadHandler.AuthUserDownloadSpecificRelease)
+*/
+func (inst ModuleReleaseService) downloadRelease(ctx context.Context, token string, module string, version string, saveLocation string) error {
+	cb := func(theToken string) (*http.Response, error) {
+		url, err := inst.backend.GetServerURL()
+		if err != nil {
+			return nil, err
+		}
+
+		req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s%s%s%s%s%s@%s", url, APIGroup, DownloadGroup, "/auth", "/release/", module, version), nil)
+		if err != nil {
+			return nil, err
+		}
+
+		req.Header.Set("Accept", "application/octet-stream")
+		req.Header.Set("Authorization", "Bearer "+theToken)
+
+		client := &http.Client{Timeout: 0}
+		resp, err := client.Do(req)
+		if err != nil {
+			return nil, err
+		}
+		return resp, nil
+	}
+	resp, err := inst.authService.PerformSafeCall(token, cb)
+	if err != nil {
+		return err
+	}
+	defer resp.Body.Close()
+
+	saveAs := inst.getModuleTarBallName(module, version)
+	return inst.StoreRelease(resp, saveLocation, saveAs)
+}
+
+func (inst ModuleReleaseService) StoreRelease(resp *http.Response, destPath string, saveAs string) error {
+	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
+		return fmt.Errorf("download failed: %s", resp.Status)
+	}
+
+	if !utils.FolderExists(filepath.Dir(destPath)) {
+		if err := os.MkdirAll(filepath.Dir(destPath), 0o755); err != nil {
+			return err
+		}
+	}
+
+	theFile := filepath.Join(destPath, saveAs)
+	out, err := os.Create(theFile)
+	if err != nil {
+		return err
+	}
+	defer out.Close()
+
+	total := resp.ContentLength // -1 if unknown
+
+	var bar *progressbar.ProgressBar
+
+	if total > 0 {
+		bar = progressbar.DefaultBytes(resp.ContentLength, "downloading")
+	} else {
+		bar = progressbar.NewOptions(
+			-1,
+			progressbar.OptionSetDescription("downloading"),
+			progressbar.OptionShowBytes(true),
+		)
+	}
+
+	_, err = io.Copy(io.MultiWriter(out, bar), resp.Body)
+	if err != nil {
+		return err
+	}
+
+	_ = bar.Finish()
+	return nil
+}
+
 func (inst ModuleReleaseService) ReleaseDump(token string, filter *userinput.ReleaseFilterParams, view string) error {
 	modules, err := inst.GetFilteredModuleReleases(token, filter)
 	if err != nil {
@@ -142,6 +265,7 @@ func (inst ModuleReleaseService) ReleaseDump(token string, filter *userinput.Rel
 	}
 	return nil
 }
+
 func (inst ModuleReleaseService) GetFilteredModuleReleases(token string, p *userinput.ReleaseFilterParams) ([]models.ModuleEnrichedDTO, error) {
 
 	cb := func(theToken string) (*http.Response, error) {
