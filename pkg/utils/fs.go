@@ -3,8 +3,8 @@ package utils
 import "os"
 
 func FolderExists(folder string) bool {
-	_, err := os.Stat(folder)
-	return !os.IsNotExist(err)
+	info, err := os.Stat(folder)
+	return !os.IsNotExist(err) && info.IsDir()
 }
 
 func FileExists(path string) bool {
@@ -13,4 +13,17 @@ func FileExists(path string) bool {
 		return false
 	}
 	return !info.IsDir()
+}
+
+func CreateFolder(folder string) error {
+	if folder == "." {
+		return nil
+	}
+	err := os.Mkdir(folder, os.ModePerm)
+	if err != nil {
+		if os.IsExist(err) {
+			return nil
+		}
+	}
+	return err
 }

@@ -3,7 +3,6 @@ package cmd
 import (
 	"emm/pkg/utils"
 	"fmt"
-	"os"
 
 	"github.com/spf13/cobra"
 )
@@ -15,6 +14,9 @@ var releaseDownloadCmd = &cobra.Command{
 	Short: "Download an available Module Release",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		module, version, err := utils.ParseModuleReleaseVersion(args[0])
+		if version == "" {
+			version = "latest"
+		}
 		if err != nil {
 			application.GetPrinter().Error(err)
 			return nil
@@ -22,7 +24,7 @@ var releaseDownloadCmd = &cobra.Command{
 		if saveLocation == "" {
 			saveLocation = application.GetDefaultFileStorageLocation()
 		}
-		if !checkLocation(saveLocation) {
+		if !handleLocation(saveLocation) {
 			return nil
 		}
 		tk, err := application.GetCurrentUserToken()
@@ -40,19 +42,15 @@ var releaseDownloadCmd = &cobra.Command{
 	},
 }
 
-func checkLocation(saveLocation string) bool {
-	if saveLocation != "" {
-		info, err := os.Stat(saveLocation)
+func handleLocation(saveLocation string) bool {
+	if !utils.FolderExists(saveLocation) {
+		err := utils.CreateFolder(saveLocation)
 		if err != nil {
-			application.GetPrinter().Error(
-				fmt.Errorf("invalid --savelocation: %w", err),
-			)
+			application.GetPrinter().Error(err)
 			return false
 		}
-		if !info.IsDir() {
-			application.GetPrinter().Error(
-				fmt.Errorf("--savelocation must be a directory"),
-			)
+		application.GetPrinter().Info(fmt.Sprintf("Created folder: '%s'.", saveLocation))
+		if !utils.FolderExists(saveLocation) {
 			return false
 		}
 	}

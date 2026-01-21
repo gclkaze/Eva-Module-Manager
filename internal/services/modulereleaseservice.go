@@ -141,7 +141,7 @@ func (inst ModuleReleaseService) DownloadRelease(ctx context.Context, token stri
 	if err != nil {
 		inst.output.Error(err)
 	} else {
-		inst.output.Info(fmt.Sprintf("✅ Module %s was downloaded successfully at %s", inst.getModuleTarBallName(module, version), saveLocation))
+		inst.output.Info(fmt.Sprintf("✅ Module %s was downloaded successfully at '%s'.", inst.getModuleTarBallName(module, version), saveLocation))
 	}
 	return nil
 }
@@ -211,7 +211,13 @@ func (inst ModuleReleaseService) downloadRelease(ctx context.Context, token stri
 
 func (inst ModuleReleaseService) StoreRelease(resp *http.Response, destPath string, saveAs string) error {
 	if resp.StatusCode < http.StatusOK || resp.StatusCode >= http.StatusMultipleChoices {
-		return fmt.Errorf("download failed: %s", resp.Status)
+		var response models.ErrorResult
+		b, _ := io.ReadAll(resp.Body)
+		err := json.Unmarshal(b, &response)
+		if err != nil {
+			return err
+		}
+		return fmt.Errorf("download failed: %s", response.Details)
 	}
 
 	if !utils.FolderExists(filepath.Dir(destPath)) {
