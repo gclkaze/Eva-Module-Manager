@@ -6,4 +6,7 @@ const (
 
 	EVA_JSON_SCHEMA_CURRENT_VERSION = 1
 	EVA_DEFAULT_EVA_MODULES         = "eva_modules"
+
+	EVA_DEFAULT_PROJECT_FILENAME_KEY = "eva_default_project_filename"
+	EVA_DEFAULT_PROJECT_FILENAME     = "eva.json"
 )

@@ -16,11 +16,11 @@ import (
 	"github.com/magiconair/properties"
 )
 
-const (
+/*const (
 	DefaultEvaFileName   = "eva.json"
 	CurrentSchemaVersion = 1
 	DefaultModulesFolder = "eva-modules"
-)
+)*/
 
 type ProjectBookkeepingService struct {
 	backend *backend.Backend
@@ -34,6 +34,11 @@ type ProjectBookkeepingService struct {
 
 	mu      sync.RWMutex
 	project eva.EvaProject
+
+	defaultEvaFileName string
+
+	currentSchemaVersion int
+	defaultModulesFolder string
 }
 
 func NewProjectBookkeepingService(projectRoot string) (*ProjectBookkeepingService, error) {
@@ -52,7 +57,7 @@ func NewProjectBookkeepingService(projectRoot string) (*ProjectBookkeepingServic
 
 	s := &ProjectBookkeepingService{
 		projectRoot: absRoot,
-		evaFilePath: filepath.Join(absRoot, DefaultEvaFileName),
+		//	evaFilePath: filepath.Join(absRoot, DefaultEvaFileName),
 	}
 
 	return s, nil
@@ -69,6 +74,21 @@ func (inst *ProjectBookkeepingService) SetPrinter(output output.Printer) {
 func (inst *ProjectBookkeepingService) SetProperties(props *properties.Properties) {
 	inst.props = props
 	inst.parser = utils.NewEvaJSONParser(props)
+
+	if props != nil {
+		inst.defaultEvaFileName = props.GetString(backend.EVA_DEFAULT_PROJECT_FILENAME_KEY, "")
+		inst.evaFilePath = filepath.Join(inst.projectRoot, inst.defaultEvaFileName)
+
+		inst.currentSchemaVersion = props.GetInt(backend.EVA_JSON_SCHEMA_CURRENT_VERSION_KEY, backend.EVA_JSON_SCHEMA_CURRENT_VERSION)
+		inst.defaultModulesFolder = props.GetString(backend.EVA_DEFAULT_EVA_MODULES_KEY, backend.EVA_DEFAULT_EVA_MODULES)
+	} else {
+
+		inst.defaultEvaFileName = backend.EVA_DEFAULT_PROJECT_FILENAME
+		inst.evaFilePath = filepath.Join(inst.projectRoot, inst.defaultEvaFileName)
+		inst.currentSchemaVersion = backend.EVA_JSON_SCHEMA_CURRENT_VERSION
+		inst.defaultModulesFolder = backend.EVA_DEFAULT_EVA_MODULES
+
+	}
 }
 
 func (s *ProjectBookkeepingService) ProjectRoot() string { return s.projectRoot }
@@ -103,7 +123,7 @@ func (s *ProjectBookkeepingService) ResolveEvaJSONPath(inputPath string, require
 
 	// Default: ./eva.json
 	if in == "" {
-		target := filepath.Join(".", DefaultEvaFileName)
+		target := filepath.Join(".", s.defaultEvaFileName)
 		return s.ensureExistsOrReturnAbs(target, requireExists, "eva.json not found in current directory")
 	}
 
@@ -122,19 +142,19 @@ func (s *ProjectBookkeepingService) ResolveEvaJSONPath(inputPath string, require
 
 	// Directory -> <dir>/eva.json
 	if fi.IsDir() {
-		target := filepath.Join(abs, DefaultEvaFileName)
+		target := filepath.Join(abs, s.defaultEvaFileName)
 		return s.ensureExistsOrReturnAbs(target, requireExists, "eva.json not found in directory")
 	}
 
 	// File -> must be eva.json
-	if !strings.EqualFold(filepath.Base(abs), DefaultEvaFileName) {
-		return "", fmt.Errorf("expected %s file, got: %s", DefaultEvaFileName, abs)
+	if !strings.EqualFold(filepath.Base(abs), s.defaultEvaFileName) {
+		return "", fmt.Errorf("expected %s file, got: %s", s.defaultEvaFileName, abs)
 	}
 
 	if requireExists {
 		if _, err := os.Stat(abs); err != nil {
 			if errors.Is(err, os.ErrNotExist) {
-				return "", fmt.Errorf("%s not found: %s", DefaultEvaFileName, abs)
+				return "", fmt.Errorf("%s not found: %s", s.defaultEvaFileName, abs)
 			}
 			return "", fmt.Errorf("cannot access %s: %w", abs, err)
 		}
@@ -320,7 +340,7 @@ func (s *ProjectBookkeepingService) ResolveAndPin(moduleName string, resolvedVer
 	// Canonical installation folder
 	modulesFolder := s.project.ModulesFolder
 	if strings.TrimSpace(modulesFolder) == "" {
-		modulesFolder = DefaultModulesFolder
+		modulesFolder = s.defaultModulesFolder
 	}
 	installFolder := filepath.ToSlash(filepath.Join(modulesFolder, moduleName, resolvedVersion))
 
@@ -352,8 +372,8 @@ func (s *ProjectBookkeepingService) ensureEvaFileExists(absEvaPath string) error
 
 	// Write default file
 	defaultProject := eva.EvaProject{
-		SchemaVersion: CurrentSchemaVersion,
-		ModulesFolder: DefaultModulesFolder,
+		SchemaVersion: s.currentSchemaVersion,
+		ModulesFolder: s.defaultModulesFolder,
 		Modules:       map[string]eva.EvaModuleInfo{},
 	}
 

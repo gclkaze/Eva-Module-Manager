@@ -1,8 +1,7 @@
-package test
+package utils
 
 import (
 	"emm/internal/backend"
-	"emm/pkg/utils"
 	"fmt"
 	"runtime"
 	"strings"
@@ -12,7 +11,7 @@ import (
 )
 
 func TestEvaJSONParser_ParseBytes_BlankDefaults(t *testing.T) {
-	p := utils.NewEvaJSONParser(nil)
+	p := NewEvaJSONParser(nil)
 
 	prj, err := p.ParseBytes([]byte("   \n\t"))
 	if err != nil {
@@ -31,7 +30,7 @@ func TestEvaJSONParser_ParseBytes_BlankDefaults(t *testing.T) {
 }
 
 func TestEvaJSONParser_ParseBytes_InvalidJSON(t *testing.T) {
-	p := utils.NewEvaJSONParser(nil)
+	p := NewEvaJSONParser(nil)
 
 	_, err := p.ParseBytes([]byte(`{not json}`))
 	if err == nil {
@@ -43,7 +42,7 @@ func TestEvaJSONParser_ParseBytes_InvalidJSON(t *testing.T) {
 }
 
 func TestEvaJSONParser_ParseBytes_SchemaVersionTooNew(t *testing.T) {
-	p := utils.NewEvaJSONParser(nil)
+	p := NewEvaJSONParser(nil)
 
 	json := `{
 	  "schemaVersion": 999,
@@ -61,7 +60,7 @@ func TestEvaJSONParser_ParseBytes_SchemaVersionTooNew(t *testing.T) {
 }
 
 func TestEvaJSONParser_ParseBytes_ModulesFolderInvalidAbsolute(t *testing.T) {
-	p := utils.NewEvaJSONParser(nil)
+	p := NewEvaJSONParser(nil)
 
 	json := fmt.Sprintf(`{
 	  "schemaVersion": 1,
@@ -79,7 +78,7 @@ func TestEvaJSONParser_ParseBytes_ModulesFolderInvalidAbsolute(t *testing.T) {
 }
 
 func TestEvaJSONParser_ParseBytes_ModulesFolderInvalidDotDot(t *testing.T) {
-	p := utils.NewEvaJSONParser(nil)
+	p := NewEvaJSONParser(nil)
 
 	json := `{
 	  "schemaVersion": 1,
@@ -97,7 +96,7 @@ func TestEvaJSONParser_ParseBytes_ModulesFolderInvalidDotDot(t *testing.T) {
 }
 
 func TestEvaJSONParser_ParseBytes_Floating_NoVersionKey_AllowsEmptyVersionAndNoInstallFolder(t *testing.T) {
-	p := utils.NewEvaJSONParser(nil)
+	p := NewEvaJSONParser(nil)
 
 	json := `{
 	  "schemaVersion": 1,
@@ -128,7 +127,7 @@ func TestEvaJSONParser_ParseBytes_Floating_NoVersionKey_AllowsEmptyVersionAndNoI
 }
 
 func TestEvaJSONParser_ParseBytes_Floating_Latest_AllowsLatestAndOptionalInstallFolderValidated(t *testing.T) {
-	p := utils.NewEvaJSONParser(nil)
+	p := NewEvaJSONParser(nil)
 
 	json := `{
 	  "schemaVersion": 1,
@@ -157,7 +156,7 @@ func TestEvaJSONParser_ParseBytes_Floating_Latest_AllowsLatestAndOptionalInstall
 }
 
 func TestEvaJSONParser_ParseBytes_Floating_Latest_RejectsAbsoluteInstallFolder(t *testing.T) {
-	p := utils.NewEvaJSONParser(nil)
+	p := NewEvaJSONParser(nil)
 
 	json := fmt.Sprintf(`{
 	  "schemaVersion": 1,
@@ -176,7 +175,7 @@ func TestEvaJSONParser_ParseBytes_Floating_Latest_RejectsAbsoluteInstallFolder(t
 	}
 }
 func TestEvaJSONParser_ParseBytes_Pinned_SelfHealsInstallationFolder(t *testing.T) {
-	p := utils.NewEvaJSONParser(nil)
+	p := NewEvaJSONParser(nil)
 
 	// NOTE: ParseModuleReleaseVersion normalizes semver to have "v" prefix.
 	// We intentionally use a key without "v" to ensure the parser still accepts it
@@ -206,7 +205,7 @@ func TestEvaJSONParser_ParseBytes_Pinned_SelfHealsInstallationFolder(t *testing.
 }
 
 func TestEvaJSONParser_ParseBytes_Pinned_InferVersionFromKeyWhenMissing(t *testing.T) {
-	p := utils.NewEvaJSONParser(nil)
+	p := NewEvaJSONParser(nil)
 
 	// version omitted in object; inferred from key.
 	json := `{
@@ -232,7 +231,7 @@ func TestEvaJSONParser_ParseBytes_Pinned_InferVersionFromKeyWhenMissing(t *testi
 }
 
 func TestEvaJSONParser_ParseBytes_InconsistentModuleNameRejected(t *testing.T) {
-	p := utils.NewEvaJSONParser(nil)
+	p := NewEvaJSONParser(nil)
 
 	json := `{
 	  "schemaVersion": 1,
@@ -252,7 +251,7 @@ func TestEvaJSONParser_ParseBytes_InconsistentModuleNameRejected(t *testing.T) {
 }
 
 func TestEvaJSONParser_ParseBytes_InconsistentVersionRejected(t *testing.T) {
-	p := utils.NewEvaJSONParser(nil)
+	p := NewEvaJSONParser(nil)
 
 	json := `{
 	  "schemaVersion": 1,
@@ -272,7 +271,7 @@ func TestEvaJSONParser_ParseBytes_InconsistentVersionRejected(t *testing.T) {
 }
 
 func TestEvaJSONParser_ParseBytes_NormalizesTopLevelDefaultsWhenMissing(t *testing.T) {
-	p := utils.NewEvaJSONParser(nil)
+	p := NewEvaJSONParser(nil)
 
 	// schemaVersion and modulesFolder missing
 	json := `{
@@ -297,7 +296,7 @@ func TestEvaJSONParser_ParseBytes_UsesConfiguredDefaultsFromProps(t *testing.T) 
 		backend.EVA_JSON_SCHEMA_CURRENT_VERSION_KEY: "7",
 		backend.EVA_DEFAULT_EVA_MODULES_KEY:         "my-mods",
 	})
-	p := utils.NewEvaJSONParser(props)
+	p := NewEvaJSONParser(props)
 
 	prj, err := p.ParseBytes([]byte(" \n"))
 	if err != nil {
