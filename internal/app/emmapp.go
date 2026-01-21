@@ -11,6 +11,7 @@ import (
 )
 
 type EMMApp struct {
+	cwd           string
 	output        output.Printer
 	searchService *services.ModuleSearchService
 	authService   *services.AuthService
@@ -19,17 +20,26 @@ type EMMApp struct {
 	moduleService  *services.ModuleService
 	releaseService *services.ModuleReleaseService
 
-	saveLocation string
-	onError      bool
+	bookKeepingService *services.ProjectBookkeepingService
+	saveLocation       string
+	onError            bool
 }
 
-func NewEMMApp(searchService *services.ModuleSearchService, authService *services.AuthService, moduleService *services.ModuleService, releaseService *services.ModuleReleaseService, output output.Printer) *EMMApp {
+func NewEMMApp(cwd string, searchService *services.ModuleSearchService, authService *services.AuthService, moduleService *services.ModuleService, releaseService *services.ModuleReleaseService, bookKeepingService *services.ProjectBookkeepingService, output output.Printer) *EMMApp {
 	backend := backend.NewBackend()
-	return &EMMApp{searchService: searchService, authService: authService, output: output, backend: backend, moduleService: moduleService, releaseService: releaseService, onError: false}
+	return &EMMApp{cwd: cwd, searchService: searchService, authService: authService, output: output, backend: backend, moduleService: moduleService, releaseService: releaseService, bookKeepingService: bookKeepingService, onError: false}
+}
+
+func (inst EMMApp) GetCurrentWorkingDirector() string {
+	return inst.cwd
 }
 
 func (inst EMMApp) GetDefaultFileStorageLocation() string {
 	return inst.saveLocation
+}
+
+func (inst EMMApp) VerifyEvaProjectFile(p string) (string, error) {
+	return inst.bookKeepingService.VerifyExisting(p)
 }
 
 func (inst EMMApp) IsOnError() bool {
@@ -53,11 +63,13 @@ func (inst *EMMApp) Init() error {
 	inst.searchService.SetBackend(inst.backend)
 	inst.moduleService.SetBackend(inst.backend)
 	inst.releaseService.SetBackend(inst.backend)
+	inst.bookKeepingService.SetBackend(inst.backend)
 
 	inst.authService.SetPrinter(inst.output)
 	inst.searchService.SetPrinter(inst.output)
 	inst.moduleService.SetPrinter(inst.output)
 	inst.releaseService.SetPrinter(inst.output)
+	inst.bookKeepingService.SetPrinter(inst.output)
 
 	inst.saveLocation = inst.backend.GetDefaultFileStorageLocation()
 

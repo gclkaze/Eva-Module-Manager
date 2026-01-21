@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "modulesFolder": "eva-modules",
+  "modules": {
+    "alpha-utils": {
+      "moduleName": "alpha-utils"
+    },
+
+    "beta-core@latest": {
+      "moduleName": "beta-core",
+      "version": "latest",
+      "installationFolder": "eva-modules/beta-core"
+    },
+
+    "gamma-net@v1.2.3": {
+      "moduleName": "gamma-net",
+      "version": "v1.2.3",
+      "installationFolder": "eva-modules/gamma-net/v1.2.3"
+    },
+
+    "delta-math@v2.0.0": {
+      "moduleName": "delta-math",
+      "version": "v2.0.0",
+      "installationFolder": "eva-modules/delta-math/v2.0.0"
+    },
+
+    "epsilon-io@v0.9.5": {
+      "moduleName": "epsilon-io",
+      "version": "v0.9.5",
+      "installationFolder": "eva-modules/epsilon-io/v0.9.5"
+    }
+  }
+}

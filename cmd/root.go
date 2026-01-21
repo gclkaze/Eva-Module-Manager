@@ -20,27 +20,45 @@ var rootCmd = &cobra.Command{
 var application *app.EMMApp
 
 func initApp() error {
+	cwd, err := os.Getwd()
+	if err != nil {
+		return nil
+	}
+
 	moduleSearchService := services.NewModuleSearchService()
 	authService := services.NewAuthService()
 	moduleService := services.NewModuleService(authService)
 	releaseService := services.NewModuleReleaseService(authService)
+	bookKeepingService, err := services.NewProjectBookkeepingService(cwd)
+	if err != nil {
+		return nil
+	}
 
 	application = app.NewEMMApp(
+		cwd,
 		moduleSearchService,
 		authService,
 		moduleService,
 		releaseService,
+		bookKeepingService,
 		output.NewConsolePrinter(),
 	)
 
-	err := application.Init()
+	err = application.Init()
 	if err != nil {
 		return err
 	}
 	authService.SetProperties(config.TheConfigReader.GetProperties())
 	moduleService.SetProperties(config.TheConfigReader.GetProperties())
 	releaseService.SetProperties(config.TheConfigReader.GetProperties())
+	bookKeepingService.SetProperties(config.TheConfigReader.GetProperties())
 	return nil
+}
+func initCmd() {
+	rootCmd.AddCommand(
+		// 👇 register verify
+		NewVerifyCommand(application),
+	)
 }
 
 func Execute() {
@@ -49,6 +67,9 @@ func Execute() {
 		fmt.Println(err)
 		os.Exit(1)
 	}
+
+	initCmd()
+
 	if err = rootCmd.Execute(); err != nil {
 		fmt.Println(err)
 		os.Exit(1)

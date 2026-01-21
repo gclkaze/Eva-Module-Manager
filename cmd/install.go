@@ -4,8 +4,8 @@ import "github.com/spf13/cobra"
 
 var installCmd = &cobra.Command{
 	Use:   "install",
-	Short: "Install module",
-	Long:  "Install a module",
+	Short: "Reads and installs the EVA modules according to eva.json.",
+	Long:  "Reads and installs the EVA modules according to eva.json.",
 	RunE: func(cmd *cobra.Command, args []string) error {
 		return nil
 	},
