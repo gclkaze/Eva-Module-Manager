@@ -30,6 +30,8 @@ func initApp() error {
 	moduleService := services.NewModuleService(authService)
 	releaseService := services.NewModuleReleaseService(authService)
 	bookKeepingService, err := services.NewProjectBookkeepingService(cwd)
+	installService := services.NewInstallService(cwd, bookKeepingService, releaseService)
+
 	if err != nil {
 		return nil
 	}
@@ -41,6 +43,7 @@ func initApp() error {
 		moduleService,
 		releaseService,
 		bookKeepingService,
+		installService,
 		output.NewConsolePrinter(),
 	)
 
@@ -48,16 +51,20 @@ func initApp() error {
 	if err != nil {
 		return err
 	}
+
 	authService.SetProperties(config.TheConfigReader.GetProperties())
 	moduleService.SetProperties(config.TheConfigReader.GetProperties())
 	releaseService.SetProperties(config.TheConfigReader.GetProperties())
 	bookKeepingService.SetProperties(config.TheConfigReader.GetProperties())
+	installService.SetProperties(config.TheConfigReader.GetProperties())
+
 	return nil
 }
 func initCmd() {
 	rootCmd.AddCommand(
 		// 👇 register verify
 		NewVerifyCommand(application),
+		NewInstallCommand(application),
 	)
 }
 

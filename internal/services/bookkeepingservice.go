@@ -91,8 +91,10 @@ func (inst *ProjectBookkeepingService) SetProperties(props *properties.Propertie
 	}
 }
 
-func (s *ProjectBookkeepingService) ProjectRoot() string { return s.projectRoot }
-func (s *ProjectBookkeepingService) EvaFilePath() string { return s.evaFilePath }
+func (s *ProjectBookkeepingService) ProjectRoot() string             { return s.projectRoot }
+func (s *ProjectBookkeepingService) EvaFilePath() string             { return s.evaFilePath }
+func (s *ProjectBookkeepingService) DefaultEvaModulesFolder() string { return s.defaultModulesFolder }
+func (s *ProjectBookkeepingService) DefaultEvaFileName() string      { return s.defaultEvaFileName }
 
 // --------------------------- Verify / Resolve ---------------------------
 

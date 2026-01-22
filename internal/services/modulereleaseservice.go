@@ -141,7 +141,7 @@ func (inst ModuleReleaseService) DownloadRelease(ctx context.Context, token stri
 	if err != nil {
 		inst.output.Error(err)
 	} else {
-		inst.output.Info(fmt.Sprintf("✅ Module %s was downloaded successfully at '%s'.", inst.getModuleTarBallName(module, version), saveLocation))
+		inst.output.Info(fmt.Sprintf("✅ Module %s was downloaded successfully at '%s'.", inst.GetModuleTarBallName(module, version), saveLocation))
 	}
 	return nil
 }
@@ -165,11 +165,11 @@ func (inst ModuleReleaseService) downloadPublicRelease(ctx context.Context, modu
 		return err
 	}
 	defer resp.Body.Close()
-	saveAs := inst.getModuleTarBallName(module, version)
+	saveAs := inst.GetModuleTarBallName(module, version)
 	return inst.StoreRelease(resp, saveLocation, saveAs)
 }
 
-func (inst ModuleReleaseService) getModuleTarBallName(module string, version string) string {
+func (inst ModuleReleaseService) GetModuleTarBallName(module string, version string) string {
 	return fmt.Sprintf("%s-%s.tar.gz", module, version)
 }
 
@@ -205,7 +205,7 @@ func (inst ModuleReleaseService) downloadRelease(ctx context.Context, token stri
 	}
 	defer resp.Body.Close()
 
-	saveAs := inst.getModuleTarBallName(module, version)
+	saveAs := inst.GetModuleTarBallName(module, version)
 	return inst.StoreRelease(resp, saveLocation, saveAs)
 }
 

@@ -21,13 +21,14 @@ type EMMApp struct {
 	releaseService *services.ModuleReleaseService
 
 	bookKeepingService *services.ProjectBookkeepingService
+	installService     *services.InstallService
 	saveLocation       string
 	onError            bool
 }
 
-func NewEMMApp(cwd string, searchService *services.ModuleSearchService, authService *services.AuthService, moduleService *services.ModuleService, releaseService *services.ModuleReleaseService, bookKeepingService *services.ProjectBookkeepingService, output output.Printer) *EMMApp {
+func NewEMMApp(cwd string, searchService *services.ModuleSearchService, authService *services.AuthService, moduleService *services.ModuleService, releaseService *services.ModuleReleaseService, bookKeepingService *services.ProjectBookkeepingService, installService *services.InstallService, output output.Printer) *EMMApp {
 	backend := backend.NewBackend()
-	return &EMMApp{cwd: cwd, searchService: searchService, authService: authService, output: output, backend: backend, moduleService: moduleService, releaseService: releaseService, bookKeepingService: bookKeepingService, onError: false}
+	return &EMMApp{cwd: cwd, searchService: searchService, authService: authService, output: output, backend: backend, moduleService: moduleService, releaseService: releaseService, bookKeepingService: bookKeepingService, installService: installService, onError: false}
 }
 
 func (inst EMMApp) GetCurrentWorkingDirector() string {
@@ -64,12 +65,14 @@ func (inst *EMMApp) Init() error {
 	inst.moduleService.SetBackend(inst.backend)
 	inst.releaseService.SetBackend(inst.backend)
 	inst.bookKeepingService.SetBackend(inst.backend)
+	inst.installService.SetBackend(inst.backend)
 
 	inst.authService.SetPrinter(inst.output)
 	inst.searchService.SetPrinter(inst.output)
 	inst.moduleService.SetPrinter(inst.output)
 	inst.releaseService.SetPrinter(inst.output)
 	inst.bookKeepingService.SetPrinter(inst.output)
+	inst.installService.SetPrinter(inst.output)
 
 	inst.saveLocation = inst.backend.GetDefaultFileStorageLocation()
 
@@ -174,4 +177,18 @@ func (inst EMMApp) ReleaseDump(token string, filter *userinput.ReleaseFilterPara
 
 func (inst EMMApp) DownloadRelease(ctx context.Context, token string, module string, version string, saveLocation string) error {
 	return inst.releaseService.DownloadRelease(ctx, token, module, version, saveLocation)
+}
+
+// with eva.json in path
+func (inst EMMApp) InstallAllFromPath(ctx context.Context, token string, p string) error {
+	return inst.installService.InstallAllFromPath(ctx, token, p)
+}
+
+func (inst EMMApp) InstallModuleVersion(ctx context.Context, token string, module string, version string) error {
+	return inst.installService.InstallModuleVersion(ctx, token, module, version)
+}
+
+// with ./eva.json
+func (inst EMMApp) InstallAllFromProject(ctx context.Context, token string) error {
+	return inst.installService.InstallAllFromProject(ctx, token)
 }
