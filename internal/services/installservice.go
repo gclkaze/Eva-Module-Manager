@@ -129,6 +129,27 @@ func (inst *InstallService) DirtyInstallAllFromProjectFile(ctx context.Context, 
 			summary.Failed += 1
 			return summary, err
 		}
+		if version == "" {
+			//version = "latest"
+			//we need the latest release number
+			theRelease, err := inst.releaseService.GetLatestModuleRelease(ctx, token, module)
+			if err != nil {
+				inst.output.Error(err)
+				return summary, fmt.Errorf("module %s has no latest release", module)
+			}
+
+			if theRelease == nil {
+				inst.output.Error(err)
+				return summary, fmt.Errorf("module %s has no latest release", module)
+			}
+
+			version = theRelease.Version
+			inst.output.VerboseInfo(fmt.Sprintf("Resolved latest version for '%s@%s'. Updating project file .", module, version))
+			err = inst.bookKeepingService.ResolveAndPin(module, version)
+			if err != nil {
+				return summary, fmt.Errorf("couldn't resolve latest version for : '%s@%s'", module, version)
+			}
+		}
 
 		modulePath := filepath.Join(saveLocation, module)
 		if !utils.FolderExists(modulePath) {
@@ -189,6 +210,27 @@ func (inst *InstallService) CleanInstallAllFromProjectFile(ctx context.Context, 
 		if err != nil {
 			summary.Failed += 1
 			return summary, err
+		}
+		if version == "" {
+			//version = "latest"
+			//we need the latest release number
+			theRelease, err := inst.releaseService.GetLatestModuleRelease(ctx, token, module)
+			if err != nil {
+				inst.output.Error(err)
+				return summary, fmt.Errorf("module %s has no latest release", module)
+			}
+
+			if theRelease == nil {
+				inst.output.Error(err)
+				return summary, fmt.Errorf("module %s has no latest release", module)
+			}
+
+			version = theRelease.Version
+			inst.output.VerboseInfo(fmt.Sprintf("Resolved latest version for '%s@%s'. Updating project file .", module, version))
+			err = inst.bookKeepingService.ResolveAndPin(module, version)
+			if err != nil {
+				return summary, fmt.Errorf("couldn't resolve latest version for : '%s@%s'", module, version)
+			}
 		}
 
 		modulePath := filepath.Join(saveLocation, module)

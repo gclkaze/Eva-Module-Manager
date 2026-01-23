@@ -143,7 +143,48 @@ func (inst ModuleReleaseService) DownloadRelease(ctx context.Context, token stri
 	} else {
 		inst.output.Info(fmt.Sprintf("✅ Module %s was downloaded successfully at '%s'.", inst.GetModuleTarBallName(module, version), saveLocation))
 	}
-	return nil
+	return err
+}
+
+func (inst ModuleReleaseService) GetLatestModuleRelease(ctx context.Context, token string, module string) (*models.ReleaseDTO, error) {
+	url, err := inst.backend.GetServerURL()
+	if err != nil {
+		return nil,err
+	}
+
+	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s%s%s%s%s", url, APIGroup, ReleasesGroup, "/latest/", module), nil)
+	if err != nil {
+		return nil,err
+	}
+
+	req.Header.Set("Accept", "application/octet-stream")
+
+	client := &http.Client{Timeout: 0}
+	resp, err := client.Do(req)
+	if err != nil {
+		return nil,err
+	}
+	defer resp.Body.Close()
+
+	body, err := io.ReadAll(resp.Body)
+	if err != nil {
+		return nil, err
+	}
+	//modesl.
+	if resp.StatusCode == http.StatusOK {
+		var response models.RequestResult[models.ReleaseDTO]
+		if err := json.Unmarshal(body, &response); err != nil {
+			return nil, err
+		}
+		return &response.Value, nil
+	}
+
+	var errResp models.ErrorResult
+	if err := json.Unmarshal(body, &errResp); err != nil {
+		return nil, err
+	}
+	return nil, fmt.Errorf("%s", errResp.Details)
+
 }
 
 func (inst ModuleReleaseService) downloadPublicRelease(ctx context.Context, module string, version string, saveLocation string) error {
