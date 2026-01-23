@@ -65,12 +65,20 @@ func installRunE(application *app.EMMApp, path *string) func(cmd *cobra.Command,
 		ctx := cmd.Context()
 		switch {
 		case pathSet:
-			return installFromPath(ctx, token, application, *path)
+			err = installFromPath(ctx, token, application, *path)
 		case len(args) == 1:
-			return installSingleModule(ctx, token, application, args[0])
+			err = installSingleModule(ctx, token, application, args[0])
 		default:
-			return installAllFromProject(ctx, token, application)
+			err = installAllFromProject(ctx, token, application)
 		}
+
+		if err != nil {
+			application.GetPrinter().Error(err)
+			application.GetPrinter().Error(fmt.Errorf("operation failed"))
+			return nil
+		}
+		application.GetPrinter().Info("install operation completed successfully.")
+		return nil
 	}
 }
 

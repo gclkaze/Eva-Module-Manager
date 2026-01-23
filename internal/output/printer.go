@@ -4,7 +4,10 @@ import "emm/internal/models"
 
 type Printer interface {
 	Info(msg string)
+	VerboseInfo(msg string)
 	Warn(msg string)
+	VerboseWarn(msg string)
+
 	Error(err error)
 	Success(msg string)
 	PrintModules(mod []models.Module)
@@ -13,4 +16,6 @@ type Printer interface {
 
 	PrintDetailedModuleReleaseInfo(mods []models.ModuleEnrichedDTO)
 	PrintReleaseRows(mods []models.ModuleEnrichedDTO)
+
+	GetVerboseFlagPointer() *bool
 }

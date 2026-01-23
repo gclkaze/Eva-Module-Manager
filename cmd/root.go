@@ -18,6 +18,7 @@ var rootCmd = &cobra.Command{
 }
 
 var application *app.EMMApp
+var verbose bool
 
 func initApp() error {
 	cwd, err := os.Getwd()
@@ -44,7 +45,7 @@ func initApp() error {
 		releaseService,
 		bookKeepingService,
 		installService,
-		output.NewConsolePrinter(),
+		output.NewConsolePrinter(verbose),
 	)
 
 	err = application.Init()
@@ -65,6 +66,14 @@ func initCmd() {
 		// 👇 register verify
 		NewVerifyCommand(application),
 		NewInstallCommand(application),
+	)
+
+	rootCmd.PersistentFlags().BoolVarP(
+		application.GetPrinter().GetVerboseFlagPointer(),
+		"verbose",
+		"v",
+		false,
+		"Enable verbose/debug output",
 	)
 }
 

@@ -80,6 +80,7 @@ func (inst *InstallService) InstallAllFromProjectFile(ctx context.Context, token
 		return err
 	}
 
+	inst.output.VerboseInfo(fmt.Sprintf("Project file at '%s' was verified successfully.", evafile))
 	err = inst.bookKeepingService.LoadExisting(absPath)
 	if err != nil {
 		return err
@@ -92,11 +93,62 @@ func (inst *InstallService) InstallAllFromProjectFile(ctx context.Context, token
 	modulesFolder = filepath.Join(inst.cwd, modulesFolder)
 
 	if !utils.FolderExists(modulesFolder) {
-		err := utils.CreateFolder(modulesFolder)
+		inst.output.VerboseInfo(fmt.Sprintf("Creating moduesl folder '%s'.", modulesFolder))
+		err = utils.CreateFolder(modulesFolder)
 		if err != nil {
 			return err
 		}
+		inst.output.VerboseInfo("Attempting a clean installation...")
 		return inst.CleanInstallAllFromProjectFile(ctx, token, theProject, modulesFolder)
+	}
+	inst.output.VerboseInfo("Attempting installation of the non-existing modules..")
+	err = inst.DirtyInstallAllFromProjectFile(ctx, token, theProject, modulesFolder)
+	return err
+}
+
+func (inst *InstallService) DirtyInstallAllFromProjectFile(ctx context.Context, token string, theProject eva.EvaProject, saveLocation string) error {
+	for key, info := range theProject.Modules {
+		moduleName := key
+		theModule := info
+
+		if !utils.FolderIsEmpty(theModule.InstallationFolder) {
+			inst.output.VerboseInfo(fmt.Sprintf("Skipping download & installation of module '%s'.", moduleName))
+			continue
+		}
+
+		module, version, err := utils.ParseModuleReleaseVersion(moduleName)
+		if err != nil {
+			return err
+		}
+
+		modulePath := filepath.Join(saveLocation, module)
+		if !utils.FolderExists(modulePath) {
+			err = utils.CreateFolder(modulePath)
+			if err != nil {
+				inst.output.Error(err)
+				return fmt.Errorf("coulnd't create module folder %s", modulePath)
+			}
+		}
+
+		modulePath = filepath.Join(modulePath, version)
+		if !utils.FolderExists(modulePath) {
+			err = utils.CreateFolder(modulePath)
+			if err != nil {
+				inst.output.Error(err)
+				return fmt.Errorf("coulnd't create module version folder %s", modulePath)
+			}
+		}
+		inst.output.VerboseInfo(fmt.Sprintf("Downloading '%s@%s' and storing it at %s.", module, version, modulePath))
+		err = inst.releaseService.DownloadRelease(ctx, token, module, version, modulePath)
+		if err != nil {
+			return err
+		}
+		inst.output.VerboseInfo(fmt.Sprintf("Download completed of '%s@%s', storing it at %s.", module, version, modulePath))
+		err = inst.BuildModuleFolderFromTar(ctx, module, version, modulePath)
+		if err != nil {
+			inst.output.Error(err)
+			return nil
+		}
 	}
 	return nil
 }
@@ -113,7 +165,7 @@ func (inst *InstallService) CleanInstallAllFromProjectFile(ctx context.Context, 
 
 		modulePath := filepath.Join(saveLocation, module)
 		if !utils.FolderExists(modulePath) {
-			err := utils.CreateFolder(modulePath)
+			err = utils.CreateFolder(modulePath)
 			if err != nil {
 				inst.output.Error(err)
 				return fmt.Errorf("coulnd't create module folder %s", modulePath)
@@ -122,18 +174,18 @@ func (inst *InstallService) CleanInstallAllFromProjectFile(ctx context.Context, 
 
 		modulePath = filepath.Join(modulePath, version)
 		if !utils.FolderExists(modulePath) {
-			err := utils.CreateFolder(modulePath)
+			err = utils.CreateFolder(modulePath)
 			if err != nil {
 				inst.output.Error(err)
 				return fmt.Errorf("coulnd't create module version folder %s", modulePath)
 			}
 		}
-
+		inst.output.VerboseInfo(fmt.Sprintf("Downloading '%s@%s' and storing it at %s.", module, version, modulePath))
 		err = inst.releaseService.DownloadRelease(ctx, token, module, version, modulePath)
 		if err != nil {
 			return err
 		}
-
+		inst.output.VerboseInfo(fmt.Sprintf("Download completed of '%s@%s', storing it at %s.", module, version, modulePath))
 		err = inst.BuildModuleFolderFromTar(ctx, module, version, modulePath)
 		if err != nil {
 			inst.output.Error(err)
@@ -153,6 +205,7 @@ func (inst *InstallService) BuildModuleFolderFromTar(ctx context.Context, module
 	if !utils.FileExists(theFile) {
 		return fmt.Errorf("module file '%s' is absent ", theFile)
 	}
+	inst.output.VerboseInfo(fmt.Sprintf("Unziping tar ball '%s' and storing at '%s'.", theFile, distLocation))
 	err := utils.UntarGzToDir(theFile, distLocation)
 	if err != nil {
 		inst.output.Error(fmt.Errorf("couldn't unzip module file : '%s'", theFile))

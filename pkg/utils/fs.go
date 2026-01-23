@@ -107,3 +107,30 @@ func UntarGzToDir(srcTarGz, destDir string) error {
 func DeleteFile(p string) error {
 	return os.Remove(p)
 }
+
+func IsFolderEmpty(path string) (bool, error) {
+	f, err := os.Open(path)
+	if err != nil {
+		return false, err
+	}
+	defer f.Close()
+
+	// Read at most one entry
+	_, err = f.Readdirnames(1)
+	if err == io.EOF {
+		return true, nil // empty
+	}
+	return false, err // not empty or error
+}
+
+func FolderIsEmpty(path string) bool {
+	if !FolderExists(path) {
+		return true
+	}
+
+	res, err := IsFolderEmpty(path)
+	if err != nil {
+		return true
+	}
+	return res
+}

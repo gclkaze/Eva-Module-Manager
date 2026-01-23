@@ -11,7 +11,9 @@ import (
 	"github.com/fatih/color"
 )
 
-type ConsolePrinter struct{}
+type ConsolePrinter struct {
+	onVerboseMode bool
+}
 
 // Flatten: one row per module@version
 type row struct {
@@ -21,8 +23,12 @@ type row struct {
 	Tags       []string
 }
 
-func NewConsolePrinter() *ConsolePrinter {
-	return &ConsolePrinter{}
+func NewConsolePrinter(verbose bool) *ConsolePrinter {
+	return &ConsolePrinter{onVerboseMode: verbose}
+}
+
+func (p *ConsolePrinter) GetVerboseFlagPointer() *bool {
+	return &p.onVerboseMode
 }
 
 func (p *ConsolePrinter) Info(msg string) {
@@ -32,6 +38,19 @@ func (p *ConsolePrinter) Info(msg string) {
 func (p *ConsolePrinter) Warn(msg string) {
 	warningColor := color.New(color.FgHiYellow, color.Bold).SprintFunc()
 	fmt.Fprintln(os.Stderr, warningColor(msg))
+}
+
+func (p *ConsolePrinter) VerboseInfo(msg string) {
+	if p.onVerboseMode {
+		fmt.Println(msg)
+	}
+}
+
+func (p *ConsolePrinter) VerboseWarn(msg string) {
+	if p.onVerboseMode {
+		warningColor := color.New(color.FgHiYellow, color.Bold).SprintFunc()
+		fmt.Fprintln(os.Stderr, warningColor(msg))
+	}
 }
 
 func (p *ConsolePrinter) Error(err error) {
