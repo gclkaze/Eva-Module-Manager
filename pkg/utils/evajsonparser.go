@@ -147,7 +147,20 @@ func (p *EvaJSONParser) validateModulesFolder(folder string) error {
 }
 
 func (p *EvaJSONParser) normalizeAndValidateModules(prj *eva.EvaProject) error {
+	modulesSeen := make(map[string]string)
+
 	for rawKey, rawInfo := range prj.Modules {
+		module, version, err := ParseModuleReleaseVersion(rawKey)
+		if err != nil {
+			return err
+		}
+		v, ok := modulesSeen[module]
+		if ok {
+			return fmt.Errorf("module %s has been redeclared with version %s@%s earlier..only one version per module is allowed to be included in the project", module, module, v)
+		} else {
+			modulesSeen[module] = version
+		}
+
 		key := strings.TrimSpace(rawKey)
 		if key == "" {
 			return fmt.Errorf("%w: modules contains an empty key", ErrInvalidEvaJSON)

@@ -89,8 +89,19 @@ func (inst *InstallService) InstallAllFromProjectFile(ctx context.Context, token
 	theProject := inst.bookKeepingService.Get()
 	//we got the modules, lets install the ones not there->the ones not in our file system
 
-	modulesFolder := inst.bookKeepingService.DefaultEvaModulesFolder()
-	modulesFolder = filepath.Join(inst.cwd, modulesFolder)
+	//We respect the folder described in eva.json
+	modulesFolder := ""
+	if theProject.ModulesFolder == "" {
+		modulesFolder = inst.bookKeepingService.DefaultEvaModulesFolder()
+		modulesFolder = filepath.Join(inst.cwd, modulesFolder)
+	} else {
+		if filepath.IsAbs(theProject.ModulesFolder) {
+			modulesFolder = theProject.ModulesFolder
+		} else {
+			dir := filepath.Dir(absPath)
+			modulesFolder = filepath.Join(dir, theProject.ModulesFolder)
+		}
+	}
 
 	if !utils.FolderExists(modulesFolder) {
 		inst.output.VerboseInfo(fmt.Sprintf("Creating moduesl folder '%s'.", modulesFolder))
@@ -109,15 +120,9 @@ func (inst *InstallService) DirtyInstallAllFromProjectFile(ctx context.Context, 
 	summary := models.NewInstallationSummary()
 	summary.Total = len(theProject.Modules)
 
-	for key, info := range theProject.Modules {
+	for key := range theProject.Modules {
 		moduleName := key
-		theModule := info
-
-		if !utils.FolderIsEmpty(theModule.InstallationFolder) {
-			inst.output.VerboseInfo(fmt.Sprintf("Skipping download & installation of module '%s'.", moduleName))
-			summary.Skipped += 1
-			continue
-		}
+		//theModule := info
 
 		module, version, err := utils.ParseModuleReleaseVersion(moduleName)
 		if err != nil {
@@ -144,6 +149,13 @@ func (inst *InstallService) DirtyInstallAllFromProjectFile(ctx context.Context, 
 				return summary, fmt.Errorf("coulnd't create module version folder %s", modulePath)
 			}
 		}
+
+		if !utils.FolderIsEmpty(modulePath) {
+			inst.output.VerboseInfo(fmt.Sprintf("Skipping download & installation of module '%s'.", moduleName))
+			summary.Skipped += 1
+			continue
+		}
+
 		inst.output.VerboseInfo(fmt.Sprintf("Downloading '%s@%s' and storing it at %s.", module, version, modulePath))
 		err = inst.releaseService.DownloadRelease(ctx, token, module, version, modulePath)
 		if err != nil {
@@ -160,6 +172,8 @@ func (inst *InstallService) DirtyInstallAllFromProjectFile(ctx context.Context, 
 		summary.ProcessedCounter += 1
 		summary.Success += 1
 	}
+
+	inst.bookKeepingService.Save()
 	return summary, nil
 }
 
@@ -188,6 +202,7 @@ func (inst *InstallService) CleanInstallAllFromProjectFile(ctx context.Context, 
 		}
 
 		modulePath = filepath.Join(modulePath, version)
+
 		if !utils.FolderExists(modulePath) {
 			err = utils.CreateFolder(modulePath)
 			if err != nil {
@@ -209,9 +224,11 @@ func (inst *InstallService) CleanInstallAllFromProjectFile(ctx context.Context, 
 			inst.output.Error(err)
 			return summary, nil
 		}
+
 		summary.ProcessedCounter += 1
 		summary.Success += 1
 	}
+
 	return summary, nil
 }
 
