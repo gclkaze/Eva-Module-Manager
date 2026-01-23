@@ -6,6 +6,7 @@ import (
 	"strings"
 
 	"emm/internal/app"
+	"emm/internal/models"
 	"emm/pkg/utils"
 
 	"github.com/spf13/cobra"
@@ -63,13 +64,14 @@ func installRunE(application *app.EMMApp, path *string) func(cmd *cobra.Command,
 			return nil
 		}
 		ctx := cmd.Context()
+		var summary *models.InstallationSummary
 		switch {
 		case pathSet:
-			err = installFromPath(ctx, token, application, *path)
+			summary, err = installFromPath(ctx, token, application, *path)
 		case len(args) == 1:
-			err = installSingleModule(ctx, token, application, args[0])
+			summary, err = installSingleModule(ctx, token, application, args[0])
 		default:
-			err = installAllFromProject(ctx, token, application)
+			summary, err = installAllFromProject(ctx, token, application)
 		}
 
 		if err != nil {
@@ -77,37 +79,42 @@ func installRunE(application *app.EMMApp, path *string) func(cmd *cobra.Command,
 			application.GetPrinter().Error(fmt.Errorf("operation failed"))
 			return nil
 		}
+
+		application.GetPrinter().PrintSummary(summary)
+
 		application.GetPrinter().Info("install operation completed successfully.")
 		return nil
 	}
 }
 
-func installFromPath(ctx context.Context, token string, application *app.EMMApp, path string) error {
-	if err := application.InstallAllFromPath(ctx, token, path); err != nil {
+func installFromPath(ctx context.Context, token string, application *app.EMMApp, path string) (*models.InstallationSummary, error) {
+	summary, err := application.InstallAllFromPath(ctx, token, path)
+	if err != nil {
 		application.GetPrinter().Error(err)
-		return err
+		return summary, err
 	}
-	return nil
+	return summary, nil
 }
 
-func installSingleModule(ctx context.Context, token string, application *app.EMMApp, moduleAtVersion string) error {
+func installSingleModule(ctx context.Context, token string, application *app.EMMApp, moduleAtVersion string) (*models.InstallationSummary, error) {
 	module, version, err := utils.ParseModuleReleaseVersion(moduleAtVersion)
 	if err != nil {
 		application.GetPrinter().Error(err)
-		return err
+		return nil, err
 	}
-
-	if err := application.InstallModuleVersion(ctx, token, module, version); err != nil {
+	summary, err := application.InstallModuleVersion(ctx, token, module, version)
+	if err != nil {
 		application.GetPrinter().Error(err)
-		return err
+		return summary, err
 	}
-	return nil
+	return summary, nil
 }
 
-func installAllFromProject(ctx context.Context, token string, application *app.EMMApp) error {
-	if err := application.InstallAllFromProject(ctx, token); err != nil {
+func installAllFromProject(ctx context.Context, token string, application *app.EMMApp) (*models.InstallationSummary, error) {
+	summary, err := application.InstallAllFromProject(ctx, token)
+	if err != nil {
 		application.GetPrinter().Error(err)
-		return err
+		return summary, err
 	}
-	return nil
+	return summary, nil
 }

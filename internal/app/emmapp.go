@@ -3,6 +3,7 @@ package app
 import (
 	"context"
 	"emm/internal/backend"
+	"emm/internal/models"
 	"emm/internal/models/userinput"
 	"emm/internal/output"
 	"emm/internal/services"
@@ -180,15 +181,15 @@ func (inst EMMApp) DownloadRelease(ctx context.Context, token string, module str
 }
 
 // with eva.json in path
-func (inst EMMApp) InstallAllFromPath(ctx context.Context, token string, p string) error {
+func (inst EMMApp) InstallAllFromPath(ctx context.Context, token string, p string) (*models.InstallationSummary, error) {
 	return inst.installService.InstallAllFromPath(ctx, token, p)
 }
 
-func (inst EMMApp) InstallModuleVersion(ctx context.Context, token string, module string, version string) error {
+func (inst EMMApp) InstallModuleVersion(ctx context.Context, token string, module string, version string) (*models.InstallationSummary, error) {
 	return inst.installService.InstallModuleVersion(ctx, token, module, version)
 }
 
 // with ./eva.json
-func (inst EMMApp) InstallAllFromProject(ctx context.Context, token string) error {
+func (inst EMMApp) InstallAllFromProject(ctx context.Context, token string) (*models.InstallationSummary, error) {
 	return inst.installService.InstallAllFromProject(ctx, token)
 }

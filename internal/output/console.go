@@ -46,6 +46,78 @@ func (p *ConsolePrinter) VerboseInfo(msg string) {
 	}
 }
 
+func (p *ConsolePrinter) PrintSummary(s *models.InstallationSummary) {
+	if s == nil {
+		return
+	}
+
+	// Styles
+	title := color.New(color.FgHiWhite, color.Bold).SprintFunc()
+	label := color.New(color.FgHiBlack).SprintFunc()
+
+	ok := color.New(color.FgHiGreen, color.Bold).SprintFunc()
+	warn := color.New(color.FgHiYellow, color.Bold).SprintFunc()
+	fail := color.New(color.FgHiRed, color.Bold).SprintFunc()
+
+	// Decide overall status
+	statusText := "Completed"
+	statusColor := ok
+	if s.Failed > 0 {
+		statusText = "Completed with errors"
+		statusColor = fail
+	} else if s.Skipped > 0 {
+		statusText = "Completed with warnings"
+		statusColor = warn
+	}
+
+	// Normalize processed (optional)
+	processed := s.ProcessedCounter
+	if processed <= 0 {
+		processed = s.Success + s.Skipped + s.Failed
+	}
+
+	// Small, readable block with aligned values
+	fmt.Println()
+	fmt.Println(title("Installation Summary"), label("—"), statusColor(statusText))
+	fmt.Println(strings.Repeat("─", 48))
+
+	fmt.Printf("%-12s %s\n", label("Total:"), fmt.Sprintf("%d", s.Total))
+	fmt.Printf("%-12s %s\n", label("Processed:"), fmt.Sprintf("%d", processed))
+
+	fmt.Printf("%-12s %s\n", ok("Success:"), fmt.Sprintf("%d", s.Success))
+
+	// Only show non-zero categories to reduce noise
+	if s.Skipped > 0 {
+		fmt.Printf("%-12s %s\n", warn("Skipped:"), fmt.Sprintf("%d", s.Skipped))
+	}
+	if s.Failed > 0 {
+		fmt.Printf("%-12s %s\n", fail("Failed:"), fmt.Sprintf("%d", s.Failed))
+	}
+
+	fmt.Println(strings.Repeat("─", 48))
+
+	// A short actionable hint line
+	if !p.onVerboseMode {
+		switch {
+		case s.Failed > 0:
+			fmt.Println(fail("Some modules failed."), label("Run with"), title("--verbose"), label("for details."))
+		case s.Skipped > 0:
+			fmt.Println(warn("Some modules were skipped."), label("Run with"), title("--verbose"), label("to see why."))
+		default:
+			fmt.Println(ok("All modules installed successfully."))
+		}
+	} else {
+		switch {
+		case s.Failed > 0:
+			fmt.Println(fail("Some modules failed."))
+		case s.Skipped > 0:
+			fmt.Println(warn("Some modules were skipped."))
+		default:
+			fmt.Println(ok("All modules installed successfully."))
+		}
+	}
+}
+
 func (p *ConsolePrinter) VerboseWarn(msg string) {
 	if p.onVerboseMode {
 		warningColor := color.New(color.FgHiYellow, color.Bold).SprintFunc()
@@ -67,6 +139,11 @@ func (p *ConsolePrinter) Success(msg string) {
 	successColor := color.New(color.FgHiGreen, color.Bold).SprintFunc()
 	fmt.Fprintln(os.Stderr, successColor(msg))
 }
+
+func (p ConsolePrinter) PrintInstallationSummary() {
+
+}
+
 func (p ConsolePrinter) PrintReleaseRows(mods []models.ModuleEnrichedDTO) {
 	if len(mods) == 0 {
 		color.New(color.FgHiBlack).Println("No releases found.")
