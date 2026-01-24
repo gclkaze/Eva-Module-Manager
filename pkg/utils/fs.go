@@ -134,3 +134,30 @@ func FolderIsEmpty(path string) bool {
 	}
 	return res
 }
+
+func CleanFolder(dir string) error {
+	entries, err := os.ReadDir(dir)
+	if err != nil {
+		return err
+	}
+
+	for _, entry := range entries {
+		path := filepath.Join(dir, entry.Name())
+		err := os.RemoveAll(path) // Removes file or directory recursively
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+func RemoveFolder(dir string) error {
+	return os.Remove(dir)
+}
+
+func CleanAndRemoveFolder(dir string) error {
+	err := CleanFolder(dir)
+	if err != nil {
+		return err
+	}
+	return RemoveFolder(dir)
+}

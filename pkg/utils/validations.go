@@ -153,3 +153,26 @@ func ValidatePassword(password, email string) error {
 
 	return nil
 }
+
+func ReleasesAreEquivalent(moduleA string, versionA string, moduleB string, versionB string) bool {
+	moduleA = strings.TrimSpace(moduleA)
+	moduleB = strings.TrimSpace(moduleB)
+
+	if moduleA != moduleB {
+		return false
+	}
+	versionA = strings.TrimSpace(versionA)
+	versionB = strings.TrimSpace(versionB)
+
+	return VersionsAreEquivalent(versionA, versionB)
+}
+
+func VersionsAreEquivalent(versionA string, versionB string) bool {
+	if versionA[0] == 'v' {
+		versionA = versionA[1:]
+	}
+	if versionB[0] == 'v' {
+		versionB = versionB[1:]
+	}
+	return versionA == versionB
+}

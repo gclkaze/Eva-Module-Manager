@@ -32,9 +32,9 @@ func installArgs(application *app.EMMApp, path *string) cobra.PositionalArgs {
 	return func(cmd *cobra.Command, args []string) error {
 		pathSet := cmd.Flags().Changed("path")
 
-		if pathSet && len(args) > 0 {
-			return fmt.Errorf("invalid usage: use either [module@version] or --path, not both")
-		}
+		/*		if pathSet && len(args) > 0 {
+				return fmt.Errorf("invalid usage: use either [module@version] or --path, not both")
+			}*/
 
 		if len(args) > 1 {
 			return fmt.Errorf("invalid usage: expected 0 or 1 argument ([module@version])")
@@ -65,24 +65,27 @@ func installRunE(application *app.EMMApp, path *string) func(cmd *cobra.Command,
 		}
 		ctx := cmd.Context()
 		var summary *models.InstallationSummary
-		switch {
-		case pathSet:
-			summary, err = installFromPath(ctx, token, application, *path)
-		case len(args) == 1:
-			summary, err = installSingleModule(ctx, token, application, args[0])
-		default:
-			summary, err = installAllFromProject(ctx, token, application)
+		//if module is absent, we install from eva.json or path/eva.json
+		if len(args) == 0 {
+			if pathSet {
+				summary, err = installFromPath(ctx, token, application, *path)
+			} else {
+				summary, err = installAllFromProject(ctx, token, application)
+			}
+		} else {
+			summary, err = installSingleModule(ctx, token, application, args[0], path)
 		}
+		//if module is there, we install the module to eva.json or path/eva.json
 
 		if err != nil {
 			application.GetPrinter().Error(err)
-			application.GetPrinter().Error(fmt.Errorf("operation failed"))
+			application.GetPrinter().Error(fmt.Errorf("installation operation failed"))
 			return nil
 		}
 
 		application.GetPrinter().PrintSummary(summary)
 
-		application.GetPrinter().Info("install operation completed successfully.")
+		application.GetPrinter().Info("installation operation completed successfully.")
 		return nil
 	}
 }
@@ -96,13 +99,13 @@ func installFromPath(ctx context.Context, token string, application *app.EMMApp,
 	return summary, nil
 }
 
-func installSingleModule(ctx context.Context, token string, application *app.EMMApp, moduleAtVersion string) (*models.InstallationSummary, error) {
+func installSingleModule(ctx context.Context, token string, application *app.EMMApp, moduleAtVersion string, path *string) (*models.InstallationSummary, error) {
 	module, version, err := utils.ParseModuleReleaseVersion(moduleAtVersion)
 	if err != nil {
 		application.GetPrinter().Error(err)
 		return nil, err
 	}
-	summary, err := application.InstallModuleVersion(ctx, token, module, version)
+	summary, err := application.InstallModuleVersion(ctx, token, module, version, path)
 	if err != nil {
 		application.GetPrinter().Error(err)
 		return summary, err

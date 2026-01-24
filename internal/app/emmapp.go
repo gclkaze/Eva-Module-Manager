@@ -185,8 +185,8 @@ func (inst EMMApp) InstallAllFromPath(ctx context.Context, token string, p strin
 	return inst.installService.InstallAllFromPath(ctx, token, p)
 }
 
-func (inst EMMApp) InstallModuleVersion(ctx context.Context, token string, module string, version string) (*models.InstallationSummary, error) {
-	return inst.installService.InstallModuleVersion(ctx, token, module, version)
+func (inst EMMApp) InstallModuleVersion(ctx context.Context, token string, module string, version string, path *string) (*models.InstallationSummary, error) {
+	return inst.installService.InstallModuleVersion(ctx, token, module, version, path)
 }
 
 // with ./eva.json

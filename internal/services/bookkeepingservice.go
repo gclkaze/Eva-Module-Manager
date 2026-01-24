@@ -259,6 +259,103 @@ func (s *ProjectBookkeepingService) Get() eva.EvaProject {
 	return cloneProject(s.project)
 }
 
+func (s *ProjectBookkeepingService) AddAndCommitModule(module string, version string) error {
+	err := s.AddModule(module, version)
+	if err != nil {
+		return err
+	}
+
+	err = s.ResolveAndPin(module, version)
+	if err != nil {
+		return err
+	}
+
+	err = s.Save()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *ProjectBookkeepingService) EnsureModuleAndCommit(module string, version string) error {
+
+	existingKeys := make(map[string]string)
+
+	prefix := fmt.Sprintf("%s@", module)
+	//we want to find relevant modules according to <module>, remove all of them. and then add only module@version
+	for key := range s.project.Modules {
+		if strings.HasPrefix(key, prefix) {
+			mod, v, err := utils.ParseModuleReleaseVersion(key)
+			if err != nil {
+				return err
+			}
+			if mod != module {
+				continue
+			}
+			existingKeys[key] = v
+		}
+	}
+
+	for key := range existingKeys {
+		err := s.PurgeKey(key)
+		if err != nil {
+			return err
+		}
+	}
+
+	/*	err := s.Save()
+		if err != nil {
+			return err
+		}*/
+
+	//now add the one
+	err := s.ResolveAndPin(module, version)
+	if err != nil {
+		return err
+	}
+
+	err = s.Save()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *ProjectBookkeepingService) ReplaceAndCommitModule(moduleKey string, module string, version string) error {
+	err := s.PurgeKey(moduleKey)
+	if err != nil {
+		return err
+	}
+	err = s.AddModule(module, version)
+	if err != nil {
+		return err
+	}
+
+	err = s.ResolveAndPin(module, version)
+	if err != nil {
+		return err
+	}
+
+	err = s.Save()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
+func (s *ProjectBookkeepingService) PurgeAndCommitModule(moduleKey string) error {
+	err := s.PurgeKey(moduleKey)
+	if err != nil {
+		return err
+	}
+
+	err = s.Save()
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // --------------------------- Mutation helpers ---------------------------
 
 // AddModule adds a module entry; version may be "", "latest", or pinned.

@@ -231,7 +231,7 @@ func (p *EvaJSONParser) normalizeAndValidateModuleInfo(
 	}
 
 	// Enforce consistency:
-	if info.ModuleName != keyName || info.Version != keyVer {
+	if info.ModuleName != keyName || !VersionsAreEquivalent(info.Version, keyVer) /*info.Version != keyVer*/ {
 		return eva.EvaModuleInfo{}, fmt.Errorf(
 			"%w: module %q inconsistent fields (key=%s@%s, fields=%s@%s)",
 			ErrInvalidEvaJSON, key, keyName, keyVer, info.ModuleName, info.Version,
