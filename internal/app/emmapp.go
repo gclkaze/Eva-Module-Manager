@@ -193,3 +193,7 @@ func (inst EMMApp) InstallModuleVersion(ctx context.Context, token string, modul
 func (inst EMMApp) InstallAllFromProject(ctx context.Context, token string) (*models.InstallationSummary, error) {
 	return inst.installService.InstallAllFromProject(ctx, token)
 }
+
+func (inst EMMApp) UninstallModule(ctx context.Context, token string, module string, path *string) (*models.PurgeSummary, error) {
+	return inst.installService.UninstallModule(ctx, token, module, path)
+}

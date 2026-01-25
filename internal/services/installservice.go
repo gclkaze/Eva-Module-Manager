@@ -59,6 +59,7 @@ func (inst *InstallService) InstallAllFromPath(ctx context.Context, token string
 	return inst.InstallAllFromProjectFile(ctx, token, filename)
 }
 
+// it searches in project modules in order to find the module
 func (inst *InstallService) FindRelease(module string, theProject *eva.EvaProject) (string, string, error) {
 	for key := range theProject.Modules {
 		theModule, theVersion, err := utils.ParseModuleReleaseVersion(key)
@@ -70,6 +71,176 @@ func (inst *InstallService) FindRelease(module string, theProject *eva.EvaProjec
 		}
 	}
 	return "", "", nil
+}
+
+func (inst *InstallService) GetReleaseInfo(moduleKey string, theProject *eva.EvaProject) *eva.EvaModuleInfo {
+	for key, info := range theProject.Modules {
+		if key == moduleKey {
+			return &info
+		}
+
+		equiv, err := utils.ModuleReleasesAreEquivalent(key, moduleKey)
+		if err != nil {
+			inst.output.VerboseWarn(fmt.Sprintf("checking for module equivalence  between %s and %s returned %s", key, moduleKey, err.Error()))
+			return nil
+		}
+		if equiv {
+			return &info
+		}
+	}
+	return nil
+}
+
+func (inst *InstallService) UninstallModuleVersion(ctx context.Context, token string, module string, version string, path *string) (*models.PurgeSummary, error) {
+	//if there is a single release for module in the File System, then we accept: purge module
+	//otherwise we do not
+	originalModule := fmt.Sprintf("%s@%s", module, version)
+	theProject, absPath, err := inst.GetEvaProjectFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	summary := models.NewPurgeSummary()
+
+	modulesFolder := inst.getModulesFolder(absPath, theProject)
+	info := inst.GetReleaseInfo(originalModule, theProject)
+	if info == nil {
+		summary.Failed += 1
+		return summary, fmt.Errorf("couldn't find installed information for '%s'", originalModule)
+	}
+
+	//lets see if the folder exists
+	artifactLocation := filepath.Join(modulesFolder, info.ModuleName, info.Version)
+	if !utils.FolderExists(artifactLocation) {
+		inst.output.Info(fmt.Sprintf("artifact folder '%s' does not exist.", artifactLocation))
+	} else {
+		//lets remove the directory
+		err = utils.CleanAndRemoveFolder(artifactLocation)
+		if err != nil {
+			summary.Failed += 1
+			return summary, fmt.Errorf("couldn't remove folder '%s'.", artifactLocation)
+		}
+	}
+	//lets purge the key and commit the eva project file
+	err = inst.bookKeepingService.PurgeAndCommitModule(originalModule)
+	if err != nil {
+		summary.Failed += 1
+		return summary, fmt.Errorf("couldn't remove '%s' reference from the project.", originalModule)
+	}
+	summary.Success += 1
+	summary.ProcessedCounter += 1
+	return summary, nil
+}
+
+func (inst *InstallService) FullyUninstallModule(ctx context.Context, token string, module string, path *string) (*models.PurgeSummary, error) {
+	theProject, absPath, err := inst.GetEvaProjectFile(path)
+	if err != nil {
+		return nil, err
+	}
+
+	theModule, theVersion, err := inst.FindRelease(module, theProject)
+	if err != nil {
+		return nil, err
+	}
+	summary := models.NewPurgeSummary()
+	modulesFolder := inst.getModulesFolder(absPath, theProject)
+	theModuleFolder := filepath.Join(modulesFolder, module)
+
+	//we need to Remove the folders and remove the reference from the project
+	//we need to check if the folder is present, if not, we return
+	if !utils.FolderExists(theModuleFolder) {
+		inst.output.Info(fmt.Sprintf("'%s' is not currently installed in the project...", module))
+	} else {
+		//we need to print the amount of versions
+		versions, err := utils.GetModuleVersionContents(theModuleFolder)
+		if err != nil {
+			summary.Failed += 1
+			inst.output.Info(fmt.Sprintf("couldn't obtain folders at '%s' ..", theModuleFolder))
+			return summary, err
+		}
+
+		if len(versions) > 0 {
+			for i := range versions {
+				inst.output.Info(fmt.Sprintf("Version '%s' will be removed..", versions[i]))
+				thePath := filepath.Join(theModuleFolder, versions[i])
+				err = utils.CleanAndRemoveFolder(thePath)
+				if err != nil {
+					summary.Failed += 1
+					inst.output.Info(fmt.Sprintf("couldn't delete module version folder at '%s' ..", thePath))
+					return summary, err
+				}
+				summary.Success += 1
+				summary.ProcessedCounter += 1
+			}
+		}
+
+		err = utils.CleanAndRemoveFolder(theModuleFolder)
+		if err != nil {
+			summary.Failed += 1
+			inst.output.Info(fmt.Sprintf("couldn't delete module folder at '%s' ..", theModuleFolder))
+			return summary, err
+		}
+		if len(versions) > 0 {
+			inst.output.Info(fmt.Sprintf("Removed %d modules versions residing at '%s'..", len(versions), theModuleFolder))
+		} else {
+			//it seems that we just deleted the theModuleFolder
+			inst.output.Info(fmt.Sprintf("Removed '%s' module folder, residing at '%s'", module, modulesFolder))
+		}
+
+	}
+
+	//if we do not find it, print that we didnt find and return
+	if theModule == "" && theVersion == "" {
+		inst.output.Info(fmt.Sprintf("'%s' is not currently installed in the project...", module))
+		summary.Total = 1
+		summary.Skipped = 1
+		summary.Success = 1
+		return summary, nil
+	}
+	originalModule := fmt.Sprintf("%s@%s", theModule, theVersion)
+	//lets purge the key and commit the eva project file
+	err = inst.bookKeepingService.PurgeAndCommitModule(originalModule)
+	if err != nil {
+		summary.Failed += 1
+		return summary, fmt.Errorf("couldn't remove '%s' reference from the project", originalModule)
+	}
+	summary.Success += 1
+	summary.ProcessedCounter += 1
+	return summary, nil
+
+}
+
+func (inst *InstallService) UninstallModule(ctx context.Context, token string, module string, path *string) (*models.PurgeSummary, error) {
+	theModule, version, err := utils.ParseModuleReleaseVersion(module)
+	if err != nil {
+		return nil, err
+	}
+	if version == "latest" {
+		return nil, fmt.Errorf("'latest' token is not accepted as version on uninstall. Try a concrete version of a module or no version at all")
+	}
+	if version != "" {
+		return inst.UninstallModuleVersion(ctx, token, theModule, version, path)
+	}
+	//he wants to delete all for the module
+
+	//if there is a single release for module in the File System, then we accept: purge module
+	//otherwise we do not
+	return inst.FullyUninstallModule(ctx, token, module, path)
+}
+
+func (inst InstallService) getModulesFolder(absPath string, theProject *eva.EvaProject) string {
+	modulesFolder := ""
+	if theProject.ModulesFolder == "" {
+		modulesFolder = inst.bookKeepingService.DefaultEvaModulesFolder()
+		return filepath.Join(inst.cwd, modulesFolder)
+	} else {
+		if filepath.IsAbs(theProject.ModulesFolder) {
+			return theProject.ModulesFolder
+		} else {
+			dir := filepath.Dir(absPath)
+			return filepath.Join(dir, theProject.ModulesFolder)
+		}
+	}
 }
 
 func (inst *InstallService) InstallModuleVersion(ctx context.Context, token string, module string, version string, path *string) (*models.InstallationSummary, error) {

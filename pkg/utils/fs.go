@@ -161,3 +161,23 @@ func CleanAndRemoveFolder(dir string) error {
 	}
 	return RemoveFolder(dir)
 }
+
+func GetModuleVersionContents(path string) ([]string, error) {
+	entries, err := os.ReadDir(path)
+	if err != nil {
+		return nil, err
+	}
+
+	var folders []string
+	for _, entry := range entries {
+		name := entry.Name()
+		isDir := entry.IsDir()
+
+		if isDir {
+			if IsValidVersion(name) {
+				folders = append(folders, name)
+			}
+		}
+	}
+	return folders, nil
+}

@@ -14,6 +14,7 @@ type Printer interface {
 	PrintModuleInfo(m models.ModuleEnrichedInformation)
 	PrintReleaseInfo(moduleRepr string, r models.Release)
 	PrintSummary(*models.InstallationSummary)
+	PrintUninstallSummary(*models.PurgeSummary)
 
 	PrintDetailedModuleReleaseInfo(mods []models.ModuleEnrichedDTO)
 	PrintReleaseRows(mods []models.ModuleEnrichedDTO)

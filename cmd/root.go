@@ -63,9 +63,9 @@ func initApp() error {
 }
 func initCmd() {
 	rootCmd.AddCommand(
-		// 👇 register verify
 		NewVerifyCommand(application),
 		NewInstallCommand(application),
+		NewUninstallCommand(application),
 	)
 
 	rootCmd.PersistentFlags().BoolVarP(

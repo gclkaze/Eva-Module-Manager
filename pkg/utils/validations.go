@@ -72,6 +72,9 @@ func IsValidRepoName(name string) error {
 }
 
 func IsValidVersion(v string) bool {
+	if v[0] == 'v' {
+		return semver.IsValid(v)
+	}
 	return semver.IsValid("v" + v)
 }
 
@@ -154,6 +157,28 @@ func ValidatePassword(password, email string) error {
 	return nil
 }
 
+func ModuleReleasesAreEquivalent(keyA string, keyB string) (bool, error) {
+	moduleA, versionA, err := ParseModuleReleaseVersion(keyA)
+	if err != nil {
+		return false, err
+	}
+	moduleB, versionB, err := ParseModuleReleaseVersion(keyB)
+	if err != nil {
+		return false, err
+	}
+
+	moduleA = strings.TrimSpace(moduleA)
+	moduleB = strings.TrimSpace(moduleB)
+
+	if moduleA != moduleB {
+		return false, nil
+	}
+	versionA = strings.TrimSpace(versionA)
+	versionB = strings.TrimSpace(versionB)
+
+	return VersionsAreEquivalent(versionA, versionB), nil
+}
+
 func ReleasesAreEquivalent(moduleA string, versionA string, moduleB string, versionB string) bool {
 	moduleA = strings.TrimSpace(moduleA)
 	moduleB = strings.TrimSpace(moduleB)
@@ -168,6 +193,18 @@ func ReleasesAreEquivalent(moduleA string, versionA string, moduleB string, vers
 }
 
 func VersionsAreEquivalent(versionA string, versionB string) bool {
+	versionA = strings.TrimSpace(versionA)
+	versionB = strings.TrimSpace(versionB)
+
+	if versionA == "" && versionB != "" {
+		return false
+	}
+	if versionA != "" && versionB == "" {
+		return false
+	}
+	if versionA == "" && versionB == "" {
+		return true
+	}
 	if versionA[0] == 'v' {
 		versionA = versionA[1:]
 	}

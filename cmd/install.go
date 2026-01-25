@@ -31,11 +31,6 @@ func NewInstallCommand(application *app.EMMApp) *cobra.Command {
 func installArgs(application *app.EMMApp, path *string) cobra.PositionalArgs {
 	return func(cmd *cobra.Command, args []string) error {
 		pathSet := cmd.Flags().Changed("path")
-
-		/*		if pathSet && len(args) > 0 {
-				return fmt.Errorf("invalid usage: use either [module@version] or --path, not both")
-			}*/
-
 		if len(args) > 1 {
 			return fmt.Errorf("invalid usage: expected 0 or 1 argument ([module@version])")
 		}
@@ -65,7 +60,9 @@ func installRunE(application *app.EMMApp, path *string) func(cmd *cobra.Command,
 		}
 		ctx := cmd.Context()
 		var summary *models.InstallationSummary
+
 		//if module is absent, we install from eva.json or path/eva.json
+		//if module is there, we install the module to eva.json or path/eva.json
 		if len(args) == 0 {
 			if pathSet {
 				summary, err = installFromPath(ctx, token, application, *path)
@@ -75,8 +72,6 @@ func installRunE(application *app.EMMApp, path *string) func(cmd *cobra.Command,
 		} else {
 			summary, err = installSingleModule(ctx, token, application, args[0], path)
 		}
-		//if module is there, we install the module to eva.json or path/eva.json
-
 		if err != nil {
 			application.GetPrinter().Error(err)
 			application.GetPrinter().Error(fmt.Errorf("installation operation failed"))
