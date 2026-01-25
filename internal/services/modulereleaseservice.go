@@ -149,12 +149,12 @@ func (inst ModuleReleaseService) DownloadRelease(ctx context.Context, token stri
 func (inst ModuleReleaseService) GetLatestModuleRelease(ctx context.Context, token string, module string) (*models.ReleaseDTO, error) {
 	url, err := inst.backend.GetServerURL()
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s%s%s%s%s", url, APIGroup, ReleasesGroup, "/latest/", module), nil)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 
 	req.Header.Set("Accept", "application/octet-stream")
@@ -162,7 +162,7 @@ func (inst ModuleReleaseService) GetLatestModuleRelease(ctx context.Context, tok
 	client := &http.Client{Timeout: 0}
 	resp, err := client.Do(req)
 	if err != nil {
-		return nil,err
+		return nil, err
 	}
 	defer resp.Body.Close()
 
@@ -170,7 +170,6 @@ func (inst ModuleReleaseService) GetLatestModuleRelease(ctx context.Context, tok
 	if err != nil {
 		return nil, err
 	}
-	//modesl.
 	if resp.StatusCode == http.StatusOK {
 		var response models.RequestResult[models.ReleaseDTO]
 		if err := json.Unmarshal(body, &response); err != nil {

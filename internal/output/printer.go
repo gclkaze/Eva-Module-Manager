@@ -1,6 +1,9 @@
 package output
 
-import "emm/internal/models"
+import (
+	"emm/internal/models"
+	"emm/internal/models/dto"
+)
 
 type Printer interface {
 	Info(msg string)
@@ -20,4 +23,5 @@ type Printer interface {
 	PrintReleaseRows(mods []models.ModuleEnrichedDTO)
 
 	GetVerboseFlagPointer() *bool
+	PrintDevelopers(devs []dto.DeveloperDTO, currentEmail string)
 }

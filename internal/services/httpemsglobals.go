@@ -35,4 +35,6 @@ const (
 	SupervisePendingReleaseEndpoint     = "/pending/release"
 	SuperviseBanUserEndpoint            = "/ban"
 	SuperviseUnbanUserEndpoint          = "/unban"
+	SuperviseGetEndpoint                = "/get"
+	SuperviseGetUsersEndpoint           = "/users"
 )

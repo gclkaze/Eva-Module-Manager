@@ -32,6 +32,7 @@ func initApp() error {
 	releaseService := services.NewModuleReleaseService(authService)
 	bookKeepingService, err := services.NewProjectBookkeepingService(cwd)
 	installService := services.NewInstallService(cwd, bookKeepingService, releaseService)
+	superviseService := services.NewSupervisionService(authService)
 
 	if err != nil {
 		return nil
@@ -45,6 +46,7 @@ func initApp() error {
 		releaseService,
 		bookKeepingService,
 		installService,
+		superviseService,
 		output.NewConsolePrinter(verbose),
 	)
 
@@ -58,6 +60,7 @@ func initApp() error {
 	releaseService.SetProperties(config.TheConfigReader.GetProperties())
 	bookKeepingService.SetProperties(config.TheConfigReader.GetProperties())
 	installService.SetProperties(config.TheConfigReader.GetProperties())
+	superviseService.SetProperties(config.TheConfigReader.GetProperties())
 
 	return nil
 }
@@ -66,6 +69,8 @@ func initCmd() {
 		NewVerifyCommand(application),
 		NewInstallCommand(application),
 		NewUninstallCommand(application),
+
+		NewUserParentCommand(application),
 	)
 
 	rootCmd.PersistentFlags().BoolVarP(

@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"emm/internal/app"
 	"emm/internal/models"
+	"emm/internal/models/dto"
 	"emm/internal/services"
 	"testing"
 
@@ -60,6 +61,9 @@ func (m *MockPrinter) PrintModules(mods []models.Module) {
 	// Mock implementation
 }
 
+func (m *MockPrinter) PrintDevelopers(devs []dto.DeveloperDTO, currentEmail string) {
+
+}
 func (m *MockPrinter) PrintModuleInfo(moduleInfo models.ModuleEnrichedInformation) {
 	// Mock implementation
 }
@@ -115,6 +119,7 @@ func createMockApp() *app.EMMApp {
 	releaseService := services.NewModuleReleaseService(authService)
 	bookKeepingService := &services.ProjectBookkeepingService{}
 	installService := services.NewInstallService(cwd, bookKeepingService, releaseService)
+	superviseService := services.NewSupervisionService(authService)
 
 	printer := NewMockPrinter()
 
@@ -126,6 +131,7 @@ func createMockApp() *app.EMMApp {
 		releaseService,
 		bookKeepingService,
 		installService,
+		superviseService,
 		printer,
 	)
 

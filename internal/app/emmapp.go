@@ -12,11 +12,12 @@ import (
 )
 
 type EMMApp struct {
-	cwd           string
-	output        output.Printer
-	searchService *services.ModuleSearchService
-	authService   *services.AuthService
-	backend       *backend.Backend
+	cwd                string
+	output             output.Printer
+	searchService      *services.ModuleSearchService
+	authService        *services.AuthService
+	backend            *backend.Backend
+	supervisionService *services.SupervisionService
 
 	moduleService  *services.ModuleService
 	releaseService *services.ModuleReleaseService
@@ -27,9 +28,9 @@ type EMMApp struct {
 	onError            bool
 }
 
-func NewEMMApp(cwd string, searchService *services.ModuleSearchService, authService *services.AuthService, moduleService *services.ModuleService, releaseService *services.ModuleReleaseService, bookKeepingService *services.ProjectBookkeepingService, installService *services.InstallService, output output.Printer) *EMMApp {
+func NewEMMApp(cwd string, searchService *services.ModuleSearchService, authService *services.AuthService, moduleService *services.ModuleService, releaseService *services.ModuleReleaseService, bookKeepingService *services.ProjectBookkeepingService, installService *services.InstallService, supervisionService *services.SupervisionService, output output.Printer) *EMMApp {
 	backend := backend.NewBackend()
-	return &EMMApp{cwd: cwd, searchService: searchService, authService: authService, output: output, backend: backend, moduleService: moduleService, releaseService: releaseService, bookKeepingService: bookKeepingService, installService: installService, onError: false}
+	return &EMMApp{cwd: cwd, searchService: searchService, authService: authService, output: output, backend: backend, moduleService: moduleService, releaseService: releaseService, bookKeepingService: bookKeepingService, installService: installService, supervisionService: supervisionService, onError: false}
 }
 
 func (inst EMMApp) GetCurrentWorkingDirector() string {
@@ -67,6 +68,7 @@ func (inst *EMMApp) Init() error {
 	inst.releaseService.SetBackend(inst.backend)
 	inst.bookKeepingService.SetBackend(inst.backend)
 	inst.installService.SetBackend(inst.backend)
+	inst.supervisionService.SetBackend(inst.backend)
 
 	inst.authService.SetPrinter(inst.output)
 	inst.searchService.SetPrinter(inst.output)
@@ -74,6 +76,7 @@ func (inst *EMMApp) Init() error {
 	inst.releaseService.SetPrinter(inst.output)
 	inst.bookKeepingService.SetPrinter(inst.output)
 	inst.installService.SetPrinter(inst.output)
+	inst.supervisionService.SetPrinter(inst.output)
 
 	inst.saveLocation = inst.backend.GetDefaultFileStorageLocation()
 
@@ -196,4 +199,24 @@ func (inst EMMApp) InstallAllFromProject(ctx context.Context, token string) (*mo
 
 func (inst EMMApp) UninstallModule(ctx context.Context, token string, module string, path *string) (*models.PurgeSummary, error) {
 	return inst.installService.UninstallModule(ctx, token, module, path)
+}
+
+func (inst EMMApp) UsersList(ctx context.Context, token string) error {
+	return inst.supervisionService.GetUsers(ctx, token)
+}
+
+func (inst EMMApp) UserBan(ctx context.Context, token string, email string) error {
+	return inst.supervisionService.UserBan(ctx, token, email)
+}
+
+func (inst EMMApp) UserUnban(ctx context.Context, token string, email string) error {
+	return inst.supervisionService.UserUnban(ctx, token, email)
+}
+
+func (inst EMMApp) UserBanByID(ctx context.Context, token string, userID uint) error {
+	return inst.supervisionService.UserBanByID(ctx, token, userID)
+}
+
+func (inst EMMApp) UserUnbanByID(ctx context.Context, token string, userID uint) error {
+	return inst.supervisionService.UserUnbanByID(ctx, token, userID)
 }

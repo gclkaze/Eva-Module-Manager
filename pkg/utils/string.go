@@ -88,3 +88,18 @@ func ParseModuleReleaseVersion(s string) (string, string, error) {
 		return "", "", ErrInvalidModuleReleaseVersion
 	}
 }
+
+func IsUint(s string) bool {
+	if s == "" {
+		return false
+	}
+	_, err := strconv.ParseUint(s, 10, 0) // 0 → uint (platform size)
+	return err == nil
+}
+func StringToUint(s string) (uint, error) {
+	v, err := strconv.ParseUint(s, 10, 0)
+	if err != nil {
+		return 0, err
+	}
+	return uint(v), nil
+}

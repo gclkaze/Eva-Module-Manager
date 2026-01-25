@@ -2,6 +2,7 @@ package output
 
 import (
 	"emm/internal/models"
+	"emm/internal/models/dto"
 	"emm/pkg/utils"
 	"fmt"
 	"os"
@@ -115,6 +116,111 @@ func (p *ConsolePrinter) PrintSummary(s *models.InstallationSummary) {
 		default:
 			fmt.Println(ok("All modules installed successfully."))
 		}
+	}
+}
+
+func (p ConsolePrinter) PrintDevelopers(
+	devs []dto.DeveloperDTO,
+	currentUserEmail string,
+) {
+	if len(devs) == 0 {
+		color.New(color.FgHiBlack).Println("No developers found.")
+		return
+	}
+
+	// Colors
+	hdr := color.New(color.FgHiBlack, color.Bold).SprintFunc()
+	nameC := color.New(color.FgGreen).SprintFunc()
+	meta := color.New(color.FgHiBlack).SprintFunc()
+	roleC := color.New(color.FgCyan).SprintFunc()
+	bannedC := color.New(color.FgHiRed, color.Bold).SprintFunc()
+	activeC := color.New(color.FgHiGreen, color.Bold).SprintFunc()
+	selfC := color.New(color.FgCyan, color.Bold).SprintFunc()
+
+	const (
+		wMark   = 1
+		wID     = 6
+		wBanned = 7
+		wRole   = 10
+		wEmail  = 34
+		wHandle = 18
+		wName   = 22
+	)
+
+	// Header
+	fmt.Printf(
+		"%s  %s  %s  %s  %s  %s  %s\n",
+		hdr(""),
+		hdr(fixedWidthTrunc("ID", wID)),
+		hdr(fixedWidthTrunc("BANNED", wBanned)),
+		hdr(fixedWidthTrunc("ROLE", wRole)),
+		hdr(fixedWidthTrunc("EMAIL", wEmail)),
+		hdr(fixedWidthTrunc("HANDLE", wHandle)),
+		hdr("NAME"),
+	)
+
+	fixedColsWidth := wMark + wID + wBanned + wRole + wEmail + wHandle + wName
+	gaps := 2 * 6
+	fmt.Println(strings.Repeat("-", fixedColsWidth+gaps))
+
+	currentUserEmail = strings.ToLower(strings.TrimSpace(currentUserEmail))
+
+	for _, d := range devs {
+		isSelf := strings.ToLower(strings.TrimSpace(d.Email)) == currentUserEmail
+
+		mark := " "
+		rowColor := func(s string) string { return s }
+		if isSelf {
+			mark = "*"
+			rowColor = func(s string) string {
+				return selfC(s)
+			}
+		}
+
+		idStr := fixedWidthTrunc(fmt.Sprintf("%d", d.UserID), wID)
+
+		statusStr := "ACTIVE"
+		statusFn := activeC
+		if d.IsBanned {
+			statusStr = "BANNED"
+			statusFn = bannedC
+		}
+		bannedStr := fixedWidthTrunc(statusStr, wBanned)
+
+		role := strings.TrimSpace(d.UserRole)
+		if role == "" {
+			role = "-"
+		}
+		roleStr := fixedWidthTrunc(truncate(role, wRole), wRole)
+
+		email := strings.TrimSpace(d.Email)
+		if email == "" {
+			email = "-"
+		}
+		emailStr := fixedWidthTrunc(truncate(email, wEmail), wEmail)
+
+		handle := strings.TrimSpace(d.Handle)
+		if handle == "" {
+			handle = "-"
+		}
+		handleStr := fixedWidthTrunc(truncate(handle, wHandle), wHandle)
+
+		name := strings.TrimSpace(d.FirstName + " " + d.LastName)
+		if name == "" {
+			name = handle
+		}
+		nameStr := fixedWidthTrunc(truncate(name, wName), wName)
+
+		fmt.Printf(
+			"%s  %s  %s  %s  %s  %s  %s\n",
+			rowColor(mark),
+			meta(idStr),
+			statusFn(bannedStr),
+			roleC(roleStr),
+			rowColor(emailStr),
+			meta(handleStr),
+			nameC(nameStr),
+		)
 	}
 }
 
