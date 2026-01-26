@@ -46,7 +46,7 @@ func init() {
 	suggestionCmd.Flags().StringVarP(
 		&suggestionParams.Version,
 		"version",
-		"v",
+		"t",
 		"",
 		"Module release version (required)",
 	)

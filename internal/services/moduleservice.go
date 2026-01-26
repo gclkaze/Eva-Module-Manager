@@ -419,8 +419,8 @@ func (inst *ModuleService) validateAndUploadAll(token string, paths []string, pa
 			inst.output.Error(err)
 			return err
 		}
-		inst.output.Error(fmt.Errorf("%s", response.Details))
-		return fmt.Errorf("upload failed: %s", string(b))
+		//inst.output.Error(fmt.Errorf("%s", response.Details))
+		return fmt.Errorf("upload failed: %s", response.Details)
 	}
 
 	inst.output.Info(fmt.Sprintf("✅ Uploaded %d files successfully", len(files)))

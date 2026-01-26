@@ -62,7 +62,7 @@ func init() {
 
 	// []string fields
 	f.StringSliceVarP(&releaseFilter.Status, "status", "s", nil, "Filter by status")
-	f.StringSliceVarP(&releaseFilter.Versions, "versions", "v", nil, "Filter by versions")
+	f.StringSliceVarP(&releaseFilter.Versions, "versions", "o", nil, "Filter by versions")
 	f.StringSliceVarP(&releaseFilter.Tags, "tags", "t", nil, "Filter by tags")
 	f.StringSliceVarP(&releaseFilter.ModuleName, "module", "m", nil, "Filter by module name(s)")
 	f.StringSliceVarP(&releaseFilter.RepoName, "repo", "r", nil, "Filter by repo name(s)")
