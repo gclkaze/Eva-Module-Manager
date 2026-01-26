@@ -1,34 +1,39 @@
 package cmd
 
 import (
+	"emm/internal/app"
 	"fmt"
 
 	"github.com/spf13/cobra"
 )
 
-var module string
+func NewShowModuleInfoCommand(application *app.EMMApp) *cobra.Command {
+	module := ""
 
-var showCmd = &cobra.Command{
-	Use:   "info",
-	Short: "Show module or module release information",
-	Long:  "Show module information or module release information",
-	Args: func(cmd *cobra.Command, args []string) error {
-		if len(args) != 1 {
-			application.SetOnError()
-			return fmt.Errorf("provide the module name or module-name@version for module/release information")
-		}
-		module = args[0]
-		return nil
-	},
-	RunE: func(cmd *cobra.Command, args []string) error {
-		if application.IsOnError() {
+	var showCmd = &cobra.Command{
+		Use:   "info module or module@version",
+		Short: "Show module or module release information",
+		Long:  "Show module information or module release information",
+		Args: func(cmd *cobra.Command, args []string) error {
+			if len(args) != 1 {
+				application.SetOnError()
+				return fmt.Errorf("provide the module name or module-name@version for module/release information")
+			}
+			module = args[0]
 			return nil
-		}
-		err := application.GetModuleInfo(module)
-		return err
-	},
-}
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			if application.IsOnError() {
+				return nil
+			}
+			err := application.GetModuleInfo(module)
+			if err != nil {
+				application.GetPrinter().Error(err)
+			}
+			return nil
+		},
+	}
 
-func init() {
-	rootCmd.AddCommand(showCmd)
+	return showCmd
+
 }

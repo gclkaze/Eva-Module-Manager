@@ -190,6 +190,7 @@ func TestReleaseCommand(t *testing.T) {
 
 // TestInfoCommand tests the info command
 func TestInfoCommand(t *testing.T) {
+	showCmd := NewShowModuleInfoCommand(nil)
 	if showCmd == nil {
 		t.Fatal("showCmd is nil")
 	}

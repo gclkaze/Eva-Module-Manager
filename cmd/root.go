@@ -70,6 +70,7 @@ func initCmd() {
 		NewInstallCommand(application),
 		NewUninstallCommand(application),
 
+		NewShowModuleInfoCommand(application),
 		NewWhoamiCommand(application),
 
 		NewUserParentCommand(application),
