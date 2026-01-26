@@ -73,6 +73,8 @@ func initCmd() {
 		NewShowModuleInfoCommand(application),
 		NewWhoamiCommand(application),
 
+		NewLoginCommand(application),
+
 		NewUserParentCommand(application),
 	)
 

@@ -148,20 +148,20 @@ func TestCommandDescriptions(t *testing.T) {
 	mockApp := createMockApp()
 
 	commands := []struct {
-		name  string
-		cmd   *cobra.Command
+		name string
+		cmd  *cobra.Command
 	}{
 		{
-			name:  "verify",
-			cmd:   NewVerifyCommand(mockApp),
+			name: "verify",
+			cmd:  NewVerifyCommand(mockApp),
 		},
 		{
-			name:  "install",
-			cmd:   NewInstallCommand(mockApp),
+			name: "install",
+			cmd:  NewInstallCommand(mockApp),
 		},
 		{
-			name:  "uninstall",
-			cmd:   NewUninstallCommand(mockApp),
+			name: "uninstall",
+			cmd:  NewUninstallCommand(mockApp),
 		},
 	}
 
@@ -273,6 +273,7 @@ func TestModuleUpdateArgs(t *testing.T) {
 
 // TestLoginCommandEmail tests the login command email flag requirement
 func TestLoginCommandEmail(t *testing.T) {
+	loginCmd := NewLoginCommand(nil)
 	emailFlag := loginCmd.Flags().Lookup("email")
 	if emailFlag == nil {
 		t.Fatal("email flag not found")

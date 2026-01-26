@@ -27,6 +27,7 @@ func TestWhoamiCommand(t *testing.T) {
 
 // TestLoginCommand tests the login command
 func TestLoginCommand(t *testing.T) {
+	loginCmd := NewLoginCommand(nil)
 	if loginCmd == nil {
 		t.Fatal("loginCmd is nil")
 	}
@@ -46,6 +47,7 @@ func TestLoginCommand(t *testing.T) {
 
 // TestLoginCommandFlags tests the login command flags
 func TestLoginCommandFlags(t *testing.T) {
+	loginCmd := NewLoginCommand(nil)
 	emailFlag := loginCmd.Flags().Lookup("email")
 	if emailFlag == nil {
 		t.Error("Expected --email flag to exist")
