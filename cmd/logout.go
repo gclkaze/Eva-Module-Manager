@@ -10,6 +10,7 @@ import (
 )
 
 func NewLogoutCommand(application *app.EMMApp) *cobra.Command {
+	var email string
 	var logoutCmd = &cobra.Command{
 		Use:   "logout",
 		Short: "Logout the current active user or logout known user associated with the email input.",

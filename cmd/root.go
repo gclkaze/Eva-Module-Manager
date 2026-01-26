@@ -74,9 +74,11 @@ func initCmd() {
 		NewWhoamiCommand(application),
 
 		NewLoginCommand(application),
+		NewRegisterCommand(application),
 		NewLogoutCommand(application),
 
 		NewUserParentCommand(application),
+		NewModuleParentCommand(application),
 	)
 
 	rootCmd.PersistentFlags().BoolVarP(

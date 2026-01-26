@@ -70,6 +70,6 @@ func NewLoginCommand(application *app.EMMApp) *cobra.Command {
 		"",
 		"The user's email",
 	)
-	_ = registerCmd.MarkFlagRequired("email")
+	_ = loginCmd.MarkFlagRequired("email")
 	return loginCmd
 }

@@ -35,30 +35,9 @@ func UninstallArgs(application *app.EMMApp, path *string) cobra.PositionalArgs {
 		if pathSet && strings.TrimSpace(*path) == "" {
 			return fmt.Errorf("--path cannot be empty")
 		}
-
-		/*		if len(args) == 1 {
-				if _, _, err := utils.ParseModuleReleaseVersion(args[0]); err != nil {
-					return err
-				}
-			}*/
-
 		return nil
 	}
 }
-
-/*func UninstallSingleModule(ctx context.Context, token string, application *app.EMMApp, moduleAtVersion string, path *string) (*models.InstallationSummary, error) {
-	module, version, err := utils.ParseModuleReleaseVersion(moduleAtVersion)
-	if err != nil {
-		application.GetPrinter().Error(err)
-		return nil, err
-	}
-	summary, err := application.UninstallModuleVersion(ctx, token, module, version, path)
-	if err != nil {
-		application.GetPrinter().Error(err)
-		return summary, err
-	}
-	return summary, nil
-}*/
 
 func UninstallRunE(application *app.EMMApp, path *string) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {

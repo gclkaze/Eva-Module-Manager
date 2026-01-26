@@ -6,6 +6,7 @@ import (
 
 // TestModuleSuggestCommand tests the module suggest command
 func TestModuleSuggestCommand(t *testing.T) {
+	suggestionCmd := NewModuleSuggestionCommand(nil)
 	if suggestionCmd == nil {
 		t.Fatal("suggestionCmd is nil")
 	}
@@ -25,6 +26,7 @@ func TestModuleSuggestCommand(t *testing.T) {
 
 // TestModuleSuggestCommandFlags tests the module suggest command flags
 func TestModuleSuggestCommandFlags(t *testing.T) {
+	suggestionCmd := NewModuleSuggestionCommand(nil)
 	moduleNameFlag := suggestionCmd.Flags().Lookup("module-name")
 	if moduleNameFlag == nil {
 		t.Error("Expected --module-name flag to exist")
@@ -226,6 +228,7 @@ func TestReleaseLowerCommand(t *testing.T) {
 
 // TestSwitchUserCommand tests the switch user command if it exists
 func TestSwitchUserCommand(t *testing.T) {
+	switchCmd := NewSwitchUserCommand(nil)
 	if switchCmd == nil {
 		t.Fatal("switchCmd is nil")
 	}
@@ -245,6 +248,8 @@ func TestSwitchUserCommand(t *testing.T) {
 
 // TestSwitchUserCommandFlags tests the switch user command flags
 func TestSwitchUserCommandFlags(t *testing.T) {
+	switchCmd := NewSwitchUserCommand(nil)
+
 	emailFlag := switchCmd.Flags().Lookup("email")
 	if emailFlag == nil {
 		t.Error("Expected --email flag to exist")
@@ -258,6 +263,7 @@ func TestSwitchUserCommandFlags(t *testing.T) {
 
 // TestModuleGetUserCommand tests the module get user command if it exists
 func TestModuleGetUserCommand(t *testing.T) {
+	userModuleGetCmd := NewModuleUserGetCommand(nil)
 	if userModuleGetCmd == nil {
 		t.Fatal("userModuleGetCmd is nil")
 	}

@@ -61,6 +61,7 @@ func TestLoginCommandFlags(t *testing.T) {
 
 // TestRegisterCommand tests the register command
 func TestRegisterCommand(t *testing.T) {
+	registerCmd := NewRegisterCommand(nil)
 	if registerCmd == nil {
 		t.Fatal("registerCmd is nil")
 	}
@@ -80,6 +81,8 @@ func TestRegisterCommand(t *testing.T) {
 
 // TestRegisterCommandFlags tests the register command flags
 func TestRegisterCommandFlags(t *testing.T) {
+	registerCmd := NewRegisterCommand(nil)
+
 	emailFlag := registerCmd.Flags().Lookup("email")
 	if emailFlag == nil {
 		t.Error("Expected --email flag to exist")
@@ -127,6 +130,7 @@ func TestLogoutCommandFlags(t *testing.T) {
 
 // TestSearchCommand tests the search command
 func TestSearchCommand(t *testing.T) {
+	searchCmd := NewSearchArtifactsCommand(nil)
 	if searchCmd == nil {
 		t.Fatal("searchCmd is nil")
 	}
@@ -146,6 +150,8 @@ func TestSearchCommand(t *testing.T) {
 
 // TestSearchCommandFlags tests the search command flags
 func TestSearchCommandFlags(t *testing.T) {
+	searchCmd := NewSearchArtifactsCommand(nil)
+
 	tagsFlag := searchCmd.Flags().Lookup("tags")
 	if tagsFlag == nil {
 		t.Error("Expected --tags flag to exist")
@@ -164,6 +170,7 @@ func TestSearchCommandFlags(t *testing.T) {
 
 // TestModuleCommand tests the module command
 func TestModuleCommand(t *testing.T) {
+	moduleCmd := NewModuleParentCommand(nil)
 	if moduleCmd == nil {
 		t.Fatal("moduleCmd is nil")
 	}
@@ -214,6 +221,7 @@ func TestInfoCommand(t *testing.T) {
 
 // TestModuleUploadCommand tests the module upload command
 func TestModuleUploadCommand(t *testing.T) {
+	moduleUploadCmd := NewModuleUploadCommand(nil)
 	if moduleUploadCmd == nil {
 		t.Fatal("moduleUploadCmd is nil")
 	}
@@ -233,6 +241,7 @@ func TestModuleUploadCommand(t *testing.T) {
 
 // TestModuleUploadCommandFlags tests the module upload command flags
 func TestModuleUploadCommandFlags(t *testing.T) {
+	moduleUploadCmd := NewModuleUploadCommand(nil)
 	titleFlag := moduleUploadCmd.Flags().Lookup("title")
 	if titleFlag == nil {
 		t.Error("Expected --title flag to exist")
@@ -256,6 +265,7 @@ func TestModuleUploadCommandFlags(t *testing.T) {
 
 // TestModuleUpdateCommand tests the module update command
 func TestModuleUpdateCommand(t *testing.T) {
+	moduleUpdateCmd := NewModuleUpdateCommand(nil)
 	if moduleUpdateCmd == nil {
 		t.Fatal("moduleUpdateCmd is nil")
 	}
@@ -275,6 +285,7 @@ func TestModuleUpdateCommand(t *testing.T) {
 
 // TestModuleUpdateCommandFlags tests the module update command flags
 func TestModuleUpdateCommandFlags(t *testing.T) {
+	moduleUpdateCmd := NewModuleUpdateCommand(nil)
 	moduleNameFlag := moduleUpdateCmd.Flags().Lookup("module-name")
 	if moduleNameFlag == nil {
 		t.Error("Expected --module-name flag to exist")

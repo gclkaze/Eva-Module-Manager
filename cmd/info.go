@@ -11,7 +11,7 @@ func NewShowModuleInfoCommand(application *app.EMMApp) *cobra.Command {
 	module := ""
 
 	var showCmd = &cobra.Command{
-		Use:   "info module or module@version",
+		Use:   "info",
 		Short: "Show module or module release information",
 		Long:  "Show module information or module release information",
 		Args: func(cmd *cobra.Command, args []string) error {

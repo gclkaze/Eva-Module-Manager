@@ -45,6 +45,7 @@ func TestCmdFlagTypes(t *testing.T) {
 
 // TestCommandHierarchy tests the command hierarchy (parent-child relationships)
 func TestCommandHierarchy(t *testing.T) {
+	moduleCmd := NewModuleParentCommand(nil)
 	// Test module command has subcommands
 	if moduleCmd.Commands() == nil || len(moduleCmd.Commands()) == 0 {
 		t.Error("Module command should have subcommands")
@@ -195,6 +196,7 @@ func TestVerboseFlag(t *testing.T) {
 
 // TestSearchCommandArguments tests search command argument handling
 func TestSearchCommandArguments(t *testing.T) {
+	searchCmd := NewSearchArtifactsCommand(nil)
 	// Since searchCmd uses global application variable that might not be initialized in tests,
 	// we'll just verify the command structure exists
 	if searchCmd == nil {
@@ -247,6 +249,7 @@ func TestReleaseDownloadArgs(t *testing.T) {
 
 // TestModuleUploadArgs tests module upload command argument validation
 func TestModuleUploadArgs(t *testing.T) {
+	moduleUploadCmd := NewModuleUploadCommand(nil)
 	// Module upload uses cobra.MinimumNArgs(1)
 	if moduleUploadCmd == nil {
 		t.Fatal("moduleUploadCmd is nil")
@@ -260,6 +263,7 @@ func TestModuleUploadArgs(t *testing.T) {
 
 // TestModuleUpdateArgs tests module update command argument validation
 func TestModuleUpdateArgs(t *testing.T) {
+	moduleUpdateCmd := NewModuleUpdateCommand(nil)
 	// Module update uses cobra.MinimumNArgs(1)
 	if moduleUpdateCmd == nil {
 		t.Fatal("moduleUpdateCmd is nil")
@@ -290,6 +294,7 @@ func TestLoginCommandEmail(t *testing.T) {
 
 // TestRegisterCommandRequiredFlags tests the register command required flags
 func TestRegisterCommandRequiredFlags(t *testing.T) {
+	registerCmd := NewRegisterCommand(nil)
 	requiredFlags := []string{"email", "firstname"}
 
 	for _, flagName := range requiredFlags {
