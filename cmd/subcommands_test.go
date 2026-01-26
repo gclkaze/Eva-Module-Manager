@@ -7,6 +7,7 @@ import (
 // TestWhoamiCommand tests the whoami command
 func TestWhoamiCommand(t *testing.T) {
 	// whoamiCmd is a package-level variable defined in whoami.go
+	whoamiCmd := NewWhoamiCommand(nil)
 	if whoamiCmd == nil {
 		t.Fatal("whoamiCmd is nil")
 	}

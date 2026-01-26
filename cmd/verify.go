@@ -3,21 +3,14 @@ package cmd
 
 import (
 	"emm/internal/app"
+	"emm/internal/models/userinput"
 	"fmt"
 
 	"github.com/spf13/cobra"
 )
 
-type VerifyOptions struct {
-	// Can be:
-	//  - empty: default to ./eva.json
-	//  - a directory: <dir>/eva.json
-	//  - a file: must be eva.json
-	Path string
-}
-
 func NewVerifyCommand(application *app.EMMApp) *cobra.Command {
-	opts := &VerifyOptions{}
+	opts := &userinput.VerifyOptions{}
 
 	cmd := &cobra.Command{
 		Use:   "verify",
