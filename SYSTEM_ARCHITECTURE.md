@@ -528,25 +528,22 @@ $ emm release delete --release-id 12345
 # Login as maintainer
 $ emm login --email maintainer@example.com
 
-# View all pending releases needing approval
-$ emm supervision releases --filter "status=suggested"
+# View all releases (with filtering capability)
+$ emm release dump
 
 # Accept a user's suggested release (promote to production)
-$ emm supervision accept 12345
+$ emm release accept --release-id 12345
 # Module now available to all users
 
 # Reject a problematic release
-$ emm supervision reject 12346
+$ emm release reject --release-id 12346
 # Module author gets notification
 
 # Cancel a pending release
-$ emm supervision cancel 12347
-
-# Filter releases by various criteria
-$ emm supervision releases --filter "module=rss-parser&status=pending"
+$ emm release cancel --release-id 12347
 
 # Download and inspect a specific release
-$ emm supervision download 12345
+$ emm release download rss-parser@1.0.0 -s ./inspect
 ```
 
 ### Example 4: Administrator - Full System Management
@@ -555,31 +552,48 @@ $ emm supervision download 12345
 # Login as admin
 $ emm login --email admin@example.com
 
-# Perform all maintainer operations
-$ emm supervision accept 12345      # Accept releases
-$ emm supervision reject 12346      # Reject releases
-$ emm supervision cancel 12347      # Cancel releases
+# Perform all maintainer release operations
+$ emm release accept --release-id 12345      # Accept releases
+$ emm release reject --release-id 12346      # Reject releases
+$ emm release cancel --release-id 12347      # Cancel releases
 
 # Additionally, manage users
-$ emm supervision users list
+$ emm user list
 # Output: All registered users in system
 
-$ emm supervision user get --email spammer@example.com
-# Output: User details, account status, modules
-
 # Ban problematic user
-$ emm supervision ban --user-id 999
+$ emm user ban --user-id 999
 # User cannot upload/suggest releases anymore
 
 # Unban user when issue is resolved
-$ emm supervision unban --user-id 999
+$ emm user unban --user-id 999
 
-# Download restricted releases others cannot access
-$ emm supervision download 55555
+# Download any release (including restricted ones)
+$ emm release download restricted-module@1.0.0 -s ./modules
 # Works even if release has restricted status
 ```
 
-### Example 5: Role Transition
+### Example 5: User Registration
+
+```bash
+# Register a new account (before login)
+$ emm register \
+  --email developer@example.com \
+  --handle "dev-user" \
+  --first-name "John" \
+  --last-name "Doe"
+# Password: [prompted securely]
+
+# Account created and can now login
+$ emm login --email developer@example.com
+# Password: [prompted]
+
+# Confirm logged-in user
+$ emm whoami
+# Output: john.doe@example.com (dev-user)
+```
+
+### Example 6: Role Transition
 
 ```bash
 # User starts as basic User
@@ -588,13 +602,13 @@ $ emm login --email developer@example.com
 
 # User is promoted to Maintainer (by admin)
 # Same login, now additional capabilities:
-$ emm supervision releases --filter "status=suggested"
+$ emm release dump
 # Can now: accept/reject ANY release, manage any module
 
 # User is promoted to Administrator
 # Same login, now full capabilities:
-$ emm supervision users list
-$ emm supervision ban --user-id 123
+$ emm user list
+$ emm user ban --user-id 123
 # Can now: ban/unban users, download restricted releases
 ```
 
