@@ -73,12 +73,11 @@ func initCmd() {
 		NewShowModuleInfoCommand(application),
 		NewSearchArtifactsCommand(application),
 
-		NewWhoamiCommand(application),
-
 		NewLoginCommand(application),
 		NewRegisterCommand(application),
 		NewSwitchUserCommand(application),
 		NewLogoutCommand(application),
+		NewWhoamiCommand(application),
 
 		NewUserParentCommand(application),
 		NewModuleParentCommand(application),
