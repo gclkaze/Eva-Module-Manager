@@ -1,12 +1,22 @@
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"emm/internal/app"
 
-var moduleCmd = &cobra.Command{
-	Use:   "module",
-	Short: "Module-related commands",
-}
+	"github.com/spf13/cobra"
+)
 
-func init() {
-	rootCmd.AddCommand(moduleCmd)
+func NewModuleParentCommand(application *app.EMMApp) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "module",
+		Short: "Module-related commands",
+	}
+
+	cmd.AddCommand(
+		NewModuleSuggestionCommand(application),
+		NewModuleUpdateCommand(application),
+		NewModuleUploadCommand(application),
+		NewModuleUserGetCommand(application),
+	)
+	return cmd
 }
