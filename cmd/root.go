@@ -74,6 +74,7 @@ func initCmd() {
 		NewWhoamiCommand(application),
 
 		NewLoginCommand(application),
+		NewLogoutCommand(application),
 
 		NewUserParentCommand(application),
 	)

@@ -93,6 +93,7 @@ func TestRegisterCommandFlags(t *testing.T) {
 
 // TestLogoutCommand tests the logout command
 func TestLogoutCommand(t *testing.T) {
+	logoutCmd := NewLogoutCommand(nil)
 	if logoutCmd == nil {
 		t.Fatal("logoutCmd is nil")
 	}
@@ -112,6 +113,7 @@ func TestLogoutCommand(t *testing.T) {
 
 // TestLogoutCommandFlags tests the logout command flags
 func TestLogoutCommandFlags(t *testing.T) {
+	logoutCmd := NewLogoutCommand(nil)
 	emailFlag := logoutCmd.Flags().Lookup("email")
 	if emailFlag == nil {
 		t.Error("Expected --email flag to exist")
