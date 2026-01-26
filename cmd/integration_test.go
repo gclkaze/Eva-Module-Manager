@@ -50,6 +50,7 @@ func TestCommandHierarchy(t *testing.T) {
 	if moduleCmd.Commands() == nil || len(moduleCmd.Commands()) == 0 {
 		t.Error("Module command should have subcommands")
 	}
+	releaseCmd := NewReleaseParentCommand(nil)
 
 	// Test release command has subcommands
 	if releaseCmd.Commands() == nil || len(releaseCmd.Commands()) == 0 {
@@ -236,6 +237,7 @@ func TestReleaseDownloadArgs(t *testing.T) {
 		},
 	}
 
+	releaseDownloadCmd := NewReleaseDownloadCommand(nil)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := releaseDownloadCmd.Args(releaseDownloadCmd, tt.args)

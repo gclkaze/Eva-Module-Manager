@@ -1,12 +1,24 @@
 package cmd
 
-import "github.com/spf13/cobra"
+import (
+	"emm/internal/app"
 
-var releaseCmd = &cobra.Command{
-	Use:   "release",
-	Short: "Release-related commands",
-}
+	"github.com/spf13/cobra"
+)
 
-func init() {
-	rootCmd.AddCommand(releaseCmd)
+func NewReleaseParentCommand(application *app.EMMApp) *cobra.Command {
+	cmd := &cobra.Command{
+		Use:   "release",
+		Short: "Release-related commands",
+	}
+
+	cmd.AddCommand(
+		NewReleaseAcceptCommand(application),
+		NewReleaseCancelCommand(application),
+		NewReleaseDownloadCommand(application),
+		NewReleaseDumpCommand(application),
+		NewReleaseLowerCommand(application),
+		NewReleaseRejectCommand(application),
+	)
+	return cmd
 }

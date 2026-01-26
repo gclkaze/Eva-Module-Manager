@@ -1,6 +1,7 @@
 package cmd
 
 import (
+	"emm/internal/app"
 	"emm/internal/models/userinput"
 	"fmt"
 	"time"
@@ -8,41 +9,61 @@ import (
 	"github.com/spf13/cobra"
 )
 
-var (
-	releaseFilter    = userinput.NewReleaseFilterParams()
-	createdAfterStr  string
-	releasedAfterStr string
-	outputView       string
-)
+func NewReleaseDumpCommand(application *app.EMMApp) *cobra.Command {
 
-var releaseDumpCmd = &cobra.Command{
-	Use:   "dump [params...]",
-	Short: "Dump Module Release information, filter-powered",
-	PreRunE: func(cmd *cobra.Command, args []string) error {
-		return bindReleaseFilterTimes()
-	},
-	RunE: func(cmd *cobra.Command, args []string) error {
-		switch outputView {
-		case "detailed", "rows":
-			// ok
-		default:
-			return fmt.Errorf("invalid view %q (allowed: detailed, rows)", outputView)
+	var (
+		releaseFilter    = userinput.NewReleaseFilterParams()
+		createdAfterStr  string
+		releasedAfterStr string
+		outputView       string
+	)
+
+	bindReleaseFilterTimes := func() error {
+		if createdAfterStr != "" {
+			t, err := time.Parse(time.RFC3339, createdAfterStr)
+			if err != nil {
+				return fmt.Errorf("--created-after must be RFC3339: %w", err)
+			}
+			releaseFilter.CreatedAfter = &t
 		}
-		token, err := application.GetCurrentUserToken()
-		if err != nil {
-			application.GetPrinter().Error(err)
-			return nil
+
+		if releasedAfterStr != "" {
+			t, err := time.Parse(time.RFC3339, releasedAfterStr)
+			if err != nil {
+				return fmt.Errorf("--released-after must be RFC3339: %w", err)
+			}
+			releaseFilter.ReleasedAfter = t
 		}
-		err = application.ReleaseDump(token, releaseFilter, outputView)
-		if err != nil {
-			application.GetPrinter().Error(err)
-		}
+
 		return nil
-	},
-}
+	}
 
-func init() {
-	releaseCmd.AddCommand(releaseDumpCmd)
+	var releaseDumpCmd = &cobra.Command{
+		Use:   "dump [params...]",
+		Short: "Dump Module Release information, filter-powered",
+		PreRunE: func(cmd *cobra.Command, args []string) error {
+			return bindReleaseFilterTimes()
+		},
+		RunE: func(cmd *cobra.Command, args []string) error {
+			switch outputView {
+			case "detailed", "rows":
+				// ok
+			default:
+				return fmt.Errorf("invalid view %q (allowed: detailed, rows)", outputView)
+			}
+			token, err := application.GetCurrentUserToken()
+			if err != nil {
+				application.GetPrinter().Error(err)
+				return nil
+			}
+			err = application.ReleaseDump(token, releaseFilter, outputView)
+			if err != nil {
+				application.GetPrinter().Error(err)
+			}
+			return nil
+		},
+	}
+
 	releaseFilter = userinput.NewReleaseFilterParams()
 
 	releaseDumpCmd.Flags().StringVarP(
@@ -74,23 +95,5 @@ func init() {
 	f.StringVarP(&createdAfterStr, "created-after", "a", "", "Filter releases created after RFC3339 time")
 	f.StringVarP(&releasedAfterStr, "released-after", "R", "", "Filter releases released after RFC3339 time")
 
-}
-func bindReleaseFilterTimes() error {
-	if createdAfterStr != "" {
-		t, err := time.Parse(time.RFC3339, createdAfterStr)
-		if err != nil {
-			return fmt.Errorf("--created-after must be RFC3339: %w", err)
-		}
-		releaseFilter.CreatedAfter = &t
-	}
-
-	if releasedAfterStr != "" {
-		t, err := time.Parse(time.RFC3339, releasedAfterStr)
-		if err != nil {
-			return fmt.Errorf("--released-after must be RFC3339: %w", err)
-		}
-		releaseFilter.ReleasedAfter = t
-	}
-
-	return nil
+	return releaseDumpCmd
 }

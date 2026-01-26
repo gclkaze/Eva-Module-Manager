@@ -71,14 +71,18 @@ func initCmd() {
 		NewUninstallCommand(application),
 
 		NewShowModuleInfoCommand(application),
+		NewSearchArtifactsCommand(application),
+
 		NewWhoamiCommand(application),
 
 		NewLoginCommand(application),
 		NewRegisterCommand(application),
+		NewSwitchUserCommand(application),
 		NewLogoutCommand(application),
 
 		NewUserParentCommand(application),
 		NewModuleParentCommand(application),
+		NewReleaseParentCommand(application),
 	)
 
 	rootCmd.PersistentFlags().BoolVarP(

@@ -186,6 +186,7 @@ func TestModuleCommand(t *testing.T) {
 
 // TestReleaseCommand tests the release command
 func TestReleaseCommand(t *testing.T) {
+	releaseCmd := NewReleaseParentCommand(nil)
 	if releaseCmd == nil {
 		t.Fatal("releaseCmd is nil")
 	}
@@ -304,6 +305,8 @@ func TestModuleUpdateCommandFlags(t *testing.T) {
 
 // TestReleaseDownloadCommand tests the release download command
 func TestReleaseDownloadCommand(t *testing.T) {
+	releaseDownloadCmd := NewReleaseDownloadCommand(nil)
+
 	if releaseDownloadCmd == nil {
 		t.Fatal("releaseDownloadCmd is nil")
 	}
@@ -323,6 +326,7 @@ func TestReleaseDownloadCommand(t *testing.T) {
 
 // TestReleaseDownloadCommandFlags tests the release download command flags
 func TestReleaseDownloadCommandFlags(t *testing.T) {
+	releaseDownloadCmd := NewReleaseDownloadCommand(nil)
 	savelocationFlag := releaseDownloadCmd.Flags().Lookup("savelocation")
 	if savelocationFlag == nil {
 		t.Error("Expected --savelocation flag to exist")

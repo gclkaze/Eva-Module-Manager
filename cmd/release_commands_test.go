@@ -40,6 +40,7 @@ func TestModuleSuggestCommandFlags(t *testing.T) {
 
 // TestReleaseAcceptCommand tests the release accept command
 func TestReleaseAcceptCommand(t *testing.T) {
+	releaseAcceptCmd := NewReleaseAcceptCommand(nil)
 	if releaseAcceptCmd == nil {
 		t.Fatal("releaseAcceptCmd is nil")
 	}
@@ -81,6 +82,7 @@ func TestReleaseAcceptCommandArgs(t *testing.T) {
 		},
 	}
 
+	releaseAcceptCmd := NewReleaseAcceptCommand(nil)
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			err := releaseAcceptCmd.Args(releaseAcceptCmd, tt.args)
@@ -94,6 +96,7 @@ func TestReleaseAcceptCommandArgs(t *testing.T) {
 
 // TestReleaseDumpCommand tests the release dump command
 func TestReleaseDumpCommand(t *testing.T) {
+	releaseDumpCmd := NewReleaseDumpCommand(nil)
 	if releaseDumpCmd == nil {
 		t.Fatal("releaseDumpCmd is nil")
 	}
@@ -113,6 +116,8 @@ func TestReleaseDumpCommand(t *testing.T) {
 
 // TestReleaseDumpCommandFlags tests the release dump command flags
 func TestReleaseDumpCommandFlags(t *testing.T) {
+	releaseDumpCmd := NewReleaseDumpCommand(nil)
+
 	viewFlag := releaseDumpCmd.Flags().Lookup("view")
 	if viewFlag == nil {
 		t.Error("Expected --view flag to exist")
@@ -171,6 +176,8 @@ func TestReleaseDumpCommandFlags(t *testing.T) {
 
 // TestReleaseCancelCommand tests the release cancel command if it exists
 func TestReleaseCancelCommand(t *testing.T) {
+	releaseCancelCmd := NewReleaseCancelCommand(nil)
+
 	if releaseCancelCmd == nil {
 		t.Fatal("releaseCancelCmd is nil")
 	}
@@ -190,6 +197,8 @@ func TestReleaseCancelCommand(t *testing.T) {
 
 // TestReleaseRejectCommand tests the release reject command if it exists
 func TestReleaseRejectCommand(t *testing.T) {
+	releaseRejectCmd := NewReleaseRejectCommand(nil)
+
 	if releaseRejectCmd == nil {
 		t.Fatal("releaseRejectCmd is nil")
 	}
@@ -209,6 +218,8 @@ func TestReleaseRejectCommand(t *testing.T) {
 
 // TestReleaseLowerCommand tests the release lower command if it exists
 func TestReleaseLowerCommand(t *testing.T) {
+	releaseLowerCmd := NewReleaseLowerCommand(nil)
+
 	if releaseLowerCmd == nil {
 		t.Fatal("releaseLowerCmd is nil")
 	}
