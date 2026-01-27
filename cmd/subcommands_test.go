@@ -186,7 +186,7 @@ func TestModuleCommand(t *testing.T) {
 
 // TestReleaseCommand tests the release command
 func TestReleaseCommand(t *testing.T) {
-	releaseCmd := NewReleaseParentCommand(nil)
+	releaseCmd := NewReleaseParentCommand(nil, nil)
 	if releaseCmd == nil {
 		t.Fatal("releaseCmd is nil")
 	}

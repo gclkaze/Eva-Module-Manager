@@ -6,6 +6,7 @@ import (
 	"emm/internal/models"
 	"emm/internal/models/userinput"
 	"emm/internal/output"
+	"encoding/base64"
 	"encoding/json"
 	"errors"
 	"fmt"
@@ -13,6 +14,7 @@ import (
 	"net/http"
 	"strings"
 
+	"github.com/golang-jwt/jwt/v5"
 	"github.com/magiconair/properties"
 )
 
@@ -178,6 +180,56 @@ func (inst AuthService) getAccessToken(email string) (string, error) {
 
 func (inst AuthService) combineToken(resp models.LoginResponse) string {
 	return fmt.Sprintf("%s %s", resp.AccessToken, resp.RefreshToken)
+}
+
+func (inst AuthService) GetCurrentUserPermissions() map[string]bool {
+	u, err := inst.GetCurrentUserToken()
+	if err != nil {
+		inst.output.Error(fmt.Errorf("you need to login first"))
+		return nil
+	}
+
+	claims, err := inst.DecodeJWTClaimsNoVerify(u)
+	if err != nil {
+		inst.output.Error(err)
+	}
+
+	return inst.PermsFromClaims(claims)
+
+}
+
+func (inst AuthService) PermsFromClaims(claims jwt.MapClaims) map[string]bool {
+	out := make(map[string]bool)
+	raw, ok := claims["perms"].([]interface{})
+	if !ok {
+		return out
+	}
+	for _, v := range raw {
+		if s, ok := v.(string); ok {
+			out[s] = true
+		}
+	}
+	return out
+}
+
+func (inst AuthService) DecodeJWTClaimsNoVerify(tokenStr string) (jwt.MapClaims, error) {
+	parts := strings.Split(tokenStr, ".")
+	if len(parts) != 3 {
+		return nil, fmt.Errorf("invalid JWT format")
+	}
+
+	// JWT uses base64url without padding
+	payloadBytes, err := base64.RawURLEncoding.DecodeString(parts[1])
+	if err != nil {
+		return nil, fmt.Errorf("decode payload: %w", err)
+	}
+
+	var claims jwt.MapClaims
+	if err := json.Unmarshal(payloadBytes, &claims); err != nil {
+		return nil, fmt.Errorf("unmarshal claims: %w", err)
+	}
+
+	return claims, nil
 }
 
 func (inst *AuthService) PerformSafeCall(theToken string, request func(token string) (*http.Response, error)) (*http.Response, error) {

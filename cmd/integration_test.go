@@ -50,7 +50,7 @@ func TestCommandHierarchy(t *testing.T) {
 	if moduleCmd.Commands() == nil || len(moduleCmd.Commands()) == 0 {
 		t.Error("Module command should have subcommands")
 	}
-	releaseCmd := NewReleaseParentCommand(nil)
+	releaseCmd := NewReleaseParentCommand(nil, nil)
 
 	// Test release command has subcommands
 	if releaseCmd.Commands() == nil || len(releaseCmd.Commands()) == 0 {

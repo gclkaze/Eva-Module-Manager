@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"emm/internal/app"
+	"emm/internal/backend/perms"
 	"emm/internal/config"
 	"emm/internal/output"
 	"emm/internal/services"
@@ -66,23 +67,27 @@ func initApp() error {
 }
 func initCmd() {
 	rootCmd.AddCommand(
-		NewVerifyCommand(application),
-		NewInstallCommand(application),
-		NewUninstallCommand(application),
+		/*		NewVerifyCommand(application),
+				NewInstallCommand(application),
+				NewUninstallCommand(application),
 
-		NewShowModuleInfoCommand(application),
-		NewSearchArtifactsCommand(application),
+				NewShowModuleInfoCommand(application),
+				NewSearchArtifactsCommand(application),
 
-		NewLoginCommand(application),
-		NewRegisterCommand(application),
-		NewSwitchUserCommand(application),
-		NewLogoutCommand(application),
-		NewWhoamiCommand(application),
+				NewLoginCommand(application),
+				NewRegisterCommand(application),
+				NewSwitchUserCommand(application),
+				NewLogoutCommand(application),
+				NewWhoamiCommand(application),
 
-		NewUserParentCommand(application),
-		NewModuleParentCommand(application),
-		NewReleaseParentCommand(application),
+				NewUserParentCommand(application),
+				NewModuleParentCommand(application),
+				NewReleaseParentCommand(application),*/
+
+		enableFunctionsBasedOnPermissions(application, application.GetCurrentUserPermissions())...,
 	)
+
+	//perms := application.GetCurrentUserPermissions()
 
 	rootCmd.PersistentFlags().BoolVarP(
 		application.GetPrinter().GetVerboseFlagPointer(),
@@ -91,6 +96,31 @@ func initCmd() {
 		false,
 		"Enable verbose/debug output",
 	)
+}
+
+func enableFunctionsBasedOnPermissions(application *app.EMMApp, thePerms map[string]bool) []*cobra.Command {
+	var cmds []*cobra.Command
+	cmds = append(cmds, NewVerifyCommand(application))
+	cmds = append(cmds, NewInstallCommand(application))
+	cmds = append(cmds, NewUninstallCommand(application))
+
+	cmds = append(cmds, NewShowModuleInfoCommand(application))
+	cmds = append(cmds, NewSearchArtifactsCommand(application))
+
+	cmds = append(cmds, NewLoginCommand(application))
+	cmds = append(cmds, NewRegisterCommand(application))
+	cmds = append(cmds, NewSwitchUserCommand(application))
+	cmds = append(cmds, NewLogoutCommand(application))
+	cmds = append(cmds, NewWhoamiCommand(application))
+
+	contains := perms.ContainsMappedPerms([]perms.Permission{perms.BanUsers, perms.UnbanUsers}, thePerms)
+	if contains {
+		cmds = append(cmds, NewUserParentCommand(application))
+	}
+
+	cmds = append(cmds, NewModuleParentCommand(application))
+	cmds = append(cmds, NewReleaseParentCommand(application, thePerms))
+	return cmds
 }
 
 func Execute() {

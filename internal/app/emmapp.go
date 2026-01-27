@@ -87,6 +87,10 @@ func (inst *EMMApp) InitFromPath(path string) error {
 	return inst.backend.InitFromPath(path)
 }
 
+func (inst EMMApp) GetCurrentUserPermissions() []string {
+	return inst.authService.GetCurrentUserPermissions()
+}
+
 func (inst EMMApp) SearchByComponents(name []string, description []string, tags []string) error {
 	err := inst.searchService.SearchByComponents(name, description, tags)
 	return err
