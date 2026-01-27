@@ -19,8 +19,8 @@ func TestModuleSuggestCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if suggestionCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if suggestionCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
@@ -53,8 +53,8 @@ func TestReleaseAcceptCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if releaseAcceptCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if releaseAcceptCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
@@ -109,8 +109,8 @@ func TestReleaseDumpCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if releaseDumpCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if releaseDumpCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
@@ -190,8 +190,8 @@ func TestReleaseCancelCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if releaseCancelCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if releaseCancelCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
@@ -211,8 +211,8 @@ func TestReleaseRejectCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if releaseRejectCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if releaseRejectCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
@@ -232,8 +232,8 @@ func TestReleaseLowerCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if releaseLowerCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if releaseLowerCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
@@ -252,8 +252,8 @@ func TestSwitchUserCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if switchCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if switchCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
@@ -287,7 +287,7 @@ func TestModuleGetUserCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if userModuleGetCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if userModuleGetCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }

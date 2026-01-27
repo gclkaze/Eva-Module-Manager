@@ -20,8 +20,8 @@ func TestWhoamiCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if whoamiCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if whoamiCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
@@ -40,8 +40,8 @@ func TestLoginCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if loginCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if loginCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
@@ -74,8 +74,8 @@ func TestRegisterCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if registerCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if registerCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
@@ -109,8 +109,8 @@ func TestLogoutCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if logoutCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if logoutCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
@@ -143,8 +143,8 @@ func TestSearchCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if searchCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if searchCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
@@ -215,8 +215,8 @@ func TestInfoCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if showCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if showCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
@@ -235,8 +235,8 @@ func TestModuleUploadCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if moduleUploadCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if moduleUploadCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
@@ -279,8 +279,8 @@ func TestModuleUpdateCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if moduleUpdateCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if moduleUpdateCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
@@ -319,8 +319,8 @@ func TestReleaseDownloadCommand(t *testing.T) {
 		t.Error("Expected short description, got empty string")
 	}
 
-	if releaseDownloadCmd.RunE == nil {
-		t.Error("Expected RunE function to be defined")
+	if releaseDownloadCmd.Run == nil {
+		t.Error("Expected Run function to be defined")
 	}
 }
 
