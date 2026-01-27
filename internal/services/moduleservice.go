@@ -208,13 +208,13 @@ func (inst ModuleService) GetUserModules(token string) error {
 
 	body, _ := io.ReadAll(resp.Body)
 	if resp.StatusCode == http.StatusOK {
-		var response models.RequestResult[[]models.Module]
+		var response models.RequestResult[[]models.ModuleEnrichedDTO]
 		err = json.Unmarshal(body, &response)
 		if err != nil {
 			inst.output.Error(err)
 			return err
 		}
-		inst.output.PrintModules(response.Value)
+		inst.output.PrintDetailedModuleReleaseInfo(response.Value)
 	} else {
 		var response models.ErrorResult
 		err = json.Unmarshal(body, &response)
@@ -323,8 +323,8 @@ func (inst *ModuleService) validateAndUpdateModule(token string, paths []string,
 			inst.output.Error(err)
 			return err
 		}
-		inst.output.Error(fmt.Errorf("%s", response.Details))
-		return fmt.Errorf("upload failed: %s", string(b))
+		inst.output.Error(fmt.Errorf("upload failed: %s", response.Details))
+		return nil
 	}
 
 	inst.output.Info(fmt.Sprintf("✅ Uploaded %d files successfully", len(files)))

@@ -30,8 +30,6 @@ func NewModuleUpdateCommand(application *app.EMMApp) *cobra.Command {
 			if err != nil {
 				application.GetPrinter().Error(err)
 			}
-			return
-
 		},
 	}
 

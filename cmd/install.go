@@ -97,7 +97,6 @@ func installRun(application *app.EMMApp, path *string) func(cmd *cobra.Command, 
 		application.GetPrinter().PrintSummary(summary)
 
 		//application.GetPrinter().Info("installation operation completed successfully.")
-		return
 	}
 }
 
