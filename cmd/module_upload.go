@@ -3,7 +3,6 @@ package cmd
 import (
 	"emm/internal/app"
 	"emm/internal/models/userinput"
-	"fmt"
 
 	"github.com/spf13/cobra"
 )
@@ -15,30 +14,24 @@ func NewModuleUploadCommand(application *app.EMMApp) *cobra.Command {
 		Use:   "upload [params...]",
 		Short: "Upload a module",
 		Args:  cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			tk, err := application.GetCurrentUserToken()
 			if err != nil {
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 
 			err = uploadedCreds.AllValid()
 			if err != nil {
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 			err = application.UploadModule(tk, args, uploadedCreds)
 			if err != nil {
 				application.GetPrinter().Error(err)
 			}
-			return nil
+			return
 
-		},
-		Run: func(cmd *cobra.Command, args []string) {
-			fmt.Println("Upload called with params:")
-			for i, arg := range args {
-				fmt.Printf("  %d: %s\n", i+1, arg)
-			}
 		},
 	}
 	uploadedCreds = userinput.NewUploadParams()

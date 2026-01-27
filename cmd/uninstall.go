@@ -13,11 +13,12 @@ import (
 func NewUninstallCommand(application *app.EMMApp) *cobra.Command {
 	var path string
 	cmd := &cobra.Command{
-		Use:   "uninstall [module@version]",
-		Short: "Uninstalls an EVA module@version from eva.json.",
-		Long:  "Uninstalls an EVA module@version from the local eva.json or an eva.json, that its location is provided through --path).",
-		Args:  UninstallArgs(application, &path),
-		RunE:  UninstallRunE(application, &path),
+		Use:     "uninstall [module@version]",
+		Aliases: []string{"u"},
+		Short:   "Uninstalls an EVA module@version from eva.json.",
+		Long:    "Uninstalls an EVA module@version from the local eva.json or an eva.json, that its location is provided through --path).",
+		Args:    UninstallArgs(application, &path),
+		Run:     UninstallRun(application, &path),
 	}
 
 	cmd.Flags().StringVarP(&path, "path", "p", "", "Path to eva.json, or a directory containing eva.json (default: ./eva.json)")
@@ -40,14 +41,14 @@ func UninstallArgs(application *app.EMMApp, path *string) cobra.PositionalArgs {
 	}
 }
 
-func UninstallRunE(application *app.EMMApp, path *string) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
+func UninstallRun(application *app.EMMApp, path *string) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
 		//pathSet := cmd.Flags().Changed("path")
 
 		token, err := application.GetCurrentUserToken()
 		if err != nil {
 			application.GetPrinter().Error(err)
-			return nil
+			return
 		}
 		ctx := cmd.Context()
 		var summary *models.PurgeSummary
@@ -55,7 +56,7 @@ func UninstallRunE(application *app.EMMApp, path *string) func(cmd *cobra.Comman
 		res, err := utils.IsValidModuleOrModuleVersion(args[0])
 		if !res {
 			application.GetPrinter().Error(err)
-			return nil
+			return
 		}
 
 		summary, err = application.UninstallModule(ctx, token, args[0], path)
@@ -63,12 +64,9 @@ func UninstallRunE(application *app.EMMApp, path *string) func(cmd *cobra.Comman
 		if err != nil {
 			application.GetPrinter().Error(err)
 			application.GetPrinter().Error(fmt.Errorf("uninstallation operation failed"))
-			return nil
+			return
 		}
-
 		application.GetPrinter().PrintUninstallSummary(summary)
-
 		application.GetPrinter().Info("uninstallation operation completed successfully.")
-		return nil
 	}
 }

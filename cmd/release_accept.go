@@ -12,28 +12,28 @@ func NewReleaseAcceptCommand(application *app.EMMApp) *cobra.Command {
 		Use:   "accept module@version",
 		Args:  cobra.ExactArgs(1),
 		Short: "Accept a suggested release of a Module with a specific Version",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			res, err := utils.IsValidSpecificModuleVersion(args[0])
 			if !res {
 				application.SetOnError()
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 			module, version, err := utils.ParseModuleReleaseVersion(args[0])
 			if err != nil {
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 			tk, err := application.GetCurrentUserToken()
 			if err != nil {
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 			err = application.AcceptRelease(tk, module, version)
 			if err != nil {
 				application.GetPrinter().Error(err)
 			}
-			return nil
+			return
 
 		},
 	}

@@ -29,15 +29,15 @@ func NewShowModuleInfoCommand(application *app.EMMApp) *cobra.Command {
 			}
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			if application.IsOnError() {
-				return nil
+				return
 			}
 			err := application.GetModuleInfo(module)
 			if err != nil {
 				application.GetPrinter().Error(err)
 			}
-			return nil
+			return
 		},
 	}
 

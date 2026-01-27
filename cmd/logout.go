@@ -12,18 +12,19 @@ import (
 func NewLogoutCommand(application *app.EMMApp) *cobra.Command {
 	var email string
 	var logoutCmd = &cobra.Command{
-		Use:   "logout",
-		Short: "Logout the current active user or logout known user associated with the email input.",
-		Long:  "Logout the current active user or logout known user associated with the email input.",
-		Args:  cobra.ExactArgs(0),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Use:     "logout",
+		Aliases: []string{"signoff"},
+		Short:   "Logout the current active user or logout known user associated with the email input.",
+		Long:    "Logout the current active user or logout known user associated with the email input.",
+		Args:    cobra.ExactArgs(0),
+		Run: func(cmd *cobra.Command, args []string) {
 			var err error
 			email = strings.TrimSpace(email)
 			if email != "" {
 				if !utils.IsValidEmail(email) {
 					err = fmt.Errorf("an invalid email was provided: '%s'. ", email)
 					application.GetPrinter().Error(err)
-					return nil
+					return
 				}
 			}
 
@@ -33,7 +34,7 @@ func NewLogoutCommand(application *app.EMMApp) *cobra.Command {
 			} else {
 				application.GetPrinter().Info("Bye!")
 			}
-			return nil
+			return
 		},
 	}
 	logoutCmd.Flags().StringVarP(

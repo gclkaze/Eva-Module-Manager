@@ -13,9 +13,10 @@ func NewVerifyCommand(application *app.EMMApp) *cobra.Command {
 	opts := &userinput.VerifyOptions{}
 
 	cmd := &cobra.Command{
-		Use:   "verify",
-		Short: "Verify eva.json structure",
-		Long:  "Validates eva.json schema, module keys, and path safety (supports floating module versions).",
+		Use:     "verify",
+		Aliases: []string{"chk"},
+		Short:   "Verify eva.json structure",
+		Long:    "Validates eva.json schema, module keys, and path safety (supports floating module versions).",
 		Run: func(cmd *cobra.Command, args []string) {
 			// Verify must NOT create eva.json; it only checks if it exists and is valid.
 			absPath, err := application.VerifyEvaProjectFile(opts.Path)

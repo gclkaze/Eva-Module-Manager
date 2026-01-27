@@ -14,20 +14,20 @@ func NewReleaseDownloadCommand(application *app.EMMApp) *cobra.Command {
 		Use:   "download module@version",
 		Args:  cobra.ExactArgs(1),
 		Short: "Download an available Module Release",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			module, version, err := utils.ParseModuleReleaseVersion(args[0])
 			if version == "" {
 				version = "latest"
 			}
 			if err != nil {
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 			if saveLocation == "" {
 				saveLocation = application.GetDefaultFileStorageLocation()
 			}
 			if !handleLocation(saveLocation) {
-				return nil
+				return
 			}
 			tk, err := application.GetCurrentUserToken()
 			if err != nil {
@@ -39,7 +39,7 @@ func NewReleaseDownloadCommand(application *app.EMMApp) *cobra.Command {
 			if err != nil {
 				application.GetPrinter().Error(err)
 			}
-			return nil
+			return
 
 		},
 	}

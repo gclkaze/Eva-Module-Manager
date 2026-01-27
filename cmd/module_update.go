@@ -14,23 +14,23 @@ func NewModuleUpdateCommand(application *app.EMMApp) *cobra.Command {
 		Use:   "update [params...]",
 		Short: "Update a module",
 		Args:  cobra.MinimumNArgs(1),
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			tk, err := application.GetCurrentUserToken()
 			if err != nil {
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 
 			err = uploadedUpdatedCreds.AllValid()
 			if err != nil {
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 			err = application.UpdateModule(tk, args, uploadedUpdatedCreds)
 			if err != nil {
 				application.GetPrinter().Error(err)
 			}
-			return nil
+			return
 
 		},
 	}

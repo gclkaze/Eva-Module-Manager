@@ -39,28 +39,29 @@ func NewReleaseDumpCommand(application *app.EMMApp) *cobra.Command {
 	}
 
 	var releaseDumpCmd = &cobra.Command{
-		Use:   "dump [params...]",
-		Short: "Dump Module Release information, filter-powered",
+		Use:     "dump [params...]",
+		Aliases: []string{"dmp"},
+		Short:   "Dump Module Release information, filter-powered",
 		PreRunE: func(cmd *cobra.Command, args []string) error {
 			return bindReleaseFilterTimes()
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			switch outputView {
 			case "detailed", "rows":
 				// ok
 			default:
-				return fmt.Errorf("invalid view %q (allowed: detailed, rows)", outputView)
+				application.GetPrinter().Error(fmt.Errorf("invalid view %q (allowed: detailed, rows)", outputView))
+				return
 			}
 			token, err := application.GetCurrentUserToken()
 			if err != nil {
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 			err = application.ReleaseDump(token, releaseFilter, outputView)
 			if err != nil {
 				application.GetPrinter().Error(err)
 			}
-			return nil
 		},
 	}
 

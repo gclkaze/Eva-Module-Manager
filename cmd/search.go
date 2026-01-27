@@ -14,9 +14,10 @@ func NewSearchArtifactsCommand(application *app.EMMApp) *cobra.Command {
 	var searchQuery *userinput.ModuleSearchQuery
 
 	var searchCmd = &cobra.Command{
-		Use:   "search",
-		Short: "Search artifacts",
-		Long:  "Search artifacts using one or more tags",
+		Use:     "search",
+		Aliases: []string{"s"},
+		Short:   "Search artifacts",
+		Long:    "Search artifacts using one or more tags",
 		Args: func(cmd *cobra.Command, args []string) error {
 			if len(args) == 0 && searchQuery.IsEmpty() {
 				application.SetOnError()
@@ -25,9 +26,9 @@ func NewSearchArtifactsCommand(application *app.EMMApp) *cobra.Command {
 			return nil
 		},
 
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			if application.IsOnError() {
-				return nil
+				return
 			}
 
 			query := ""
@@ -39,23 +40,29 @@ func NewSearchArtifactsCommand(application *app.EMMApp) *cobra.Command {
 				err := searchQuery.IsValid()
 				if err != nil {
 					application.GetPrinter().Error(err)
-					return nil
+					return
 				}
 			}
 			if query != "" {
 				toks, err := utils.ParseSearchPhrases(query)
 				if err != nil {
 					application.GetPrinter().Error(err)
-					return nil
+					return
 				}
 
 				query = strings.Join(toks, ",")
 				err = application.SearchByQuery(query)
-				return err
+				if err != nil {
+					application.GetPrinter().Error(err)
+					return
+				}
+				return
 			}
 
 			err := application.SearchBySearchQuery(searchQuery)
-			return err
+			if err != nil {
+				application.GetPrinter().Error(err)
+			}
 		},
 	}
 

@@ -310,6 +310,10 @@ func (p *ConsolePrinter) Error(err error) {
 	if strings.Contains(theError, "because the target machine actively refused it") {
 		theError = "Couldn't connect to the Module Repository Server..check your internet connection"
 	}
+
+	if strings.Contains(theError, "An existing connection was forcibly closed by the remote host.") {
+		theError = "The Module Repository Server went away..check your internet connection"
+	}
 	fmt.Fprintln(os.Stderr, errorColor("Error: "+theError))
 }
 

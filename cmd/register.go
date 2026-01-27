@@ -26,40 +26,40 @@ func NewRegisterCommand(application *app.EMMApp) *cobra.Command {
 
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			if application.IsOnError() {
-				return nil
+				return
 			}
 
 			var err error
 			pwd, err := utils.ReadPassword("Password: ")
 			if err != nil {
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 			registrationCreds.Password = pwd
 			if registrationCreds.Password == "" {
 				err = fmt.Errorf("no password provided")
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 
 			err = registrationCreds.AreValid()
 			if err != nil {
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 
 			if !registrationCreds.AllInformationProvided() {
 				err = fmt.Errorf("in order to register, you will need to provide information such as your email, first & last name, a password and a handle; a unique identifier for your profile")
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 			err = application.UserRegister(registrationCreds)
 			if err != nil {
 				application.GetPrinter().Error(err)
 			}
-			return nil
+			return
 		},
 	}
 	registrationCreds = userinput.NewRegistrationCreds()

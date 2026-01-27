@@ -15,11 +15,12 @@ import (
 func NewInstallCommand(application *app.EMMApp) *cobra.Command {
 	var path string
 	cmd := &cobra.Command{
-		Use:   "install [module@version]",
-		Short: "Downloads && installs EVA modules (all from eva.json, a single module@version, or from --path).",
-		Long:  "Downloads && installs EVA modules (all from eva.json, a single module@version, or from --path).",
-		Args:  installArgs(&path),
-		RunE:  installRunE(application, &path),
+		Use:     "install [module@version]",
+		Aliases: []string{"i"},
+		Short:   "Downloads && installs EVA modules (all from eva.json, a single module@version, or from --path).",
+		Long:    "Downloads && installs EVA modules (all from eva.json, a single module@version, or from --path).",
+		Args:    installArgs(application, &path),
+		Run:     installRun(application, &path),
 	}
 
 	cmd.Flags().StringVarP(&path, "path", "p", "", "Path to eva.json, or a directory containing eva.json (default: ./eva.json)")
@@ -28,7 +29,7 @@ func NewInstallCommand(application *app.EMMApp) *cobra.Command {
 	return cmd
 }
 
-func installArgs(path *string) cobra.PositionalArgs {
+func installArgs(application *app.EMMApp, path *string) cobra.PositionalArgs {
 	return func(cmd *cobra.Command, args []string) error {
 		pathSet := cmd.Flags().Changed("path")
 		if len(args) > 1 {
@@ -61,17 +62,17 @@ func installArgs(path *string) cobra.PositionalArgs {
 	}
 }
 
-func installRunE(application *app.EMMApp, path *string) func(cmd *cobra.Command, args []string) error {
-	return func(cmd *cobra.Command, args []string) error {
+func installRun(application *app.EMMApp, path *string) func(cmd *cobra.Command, args []string) {
+	return func(cmd *cobra.Command, args []string) {
 		if application.IsOnError() {
-			return nil
+			return
 		}
 		pathSet := cmd.Flags().Changed("path")
 
 		token, err := application.GetCurrentUserToken()
 		if err != nil {
 			application.GetPrinter().Error(err)
-			return nil
+			return
 		}
 		ctx := cmd.Context()
 		var summary *models.InstallationSummary
@@ -90,13 +91,13 @@ func installRunE(application *app.EMMApp, path *string) func(cmd *cobra.Command,
 		if err != nil {
 			application.GetPrinter().Error(err)
 			application.GetPrinter().Error(fmt.Errorf("installation operation failed"))
-			return nil
+			return
 		}
 
 		application.GetPrinter().PrintSummary(summary)
 
 		//application.GetPrinter().Info("installation operation completed successfully.")
-		return nil
+		return
 	}
 }
 
@@ -127,7 +128,7 @@ func installAllFromProject(ctx context.Context, token string, application *app.E
 	summary, err := application.InstallAllFromProject(ctx, token)
 	if err != nil {
 		application.GetPrinter().Error(err)
-		return summary, err
+		return summary, nil
 	}
 	return summary, nil
 }

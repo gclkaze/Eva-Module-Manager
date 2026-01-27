@@ -12,24 +12,24 @@ func NewSwitchUserCommand(application *app.EMMApp) *cobra.Command {
 	var email string
 
 	var switchCmd = &cobra.Command{
-		Use:   "switchuser",
-		Short: "Switch to another known and registered user.",
-		Long:  "Switch to another known and registered user.",
+		Use:     "switchuser",
+		Aliases: []string{"sw"},
+		Short:   "Switch to another known and registered user.",
+		Long:    "Switch to another known and registered user.",
 		Args: func(cmd *cobra.Command, args []string) error {
 			return nil
 		},
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			var err error
 			if !utils.IsValidEmail(email) {
 				err = fmt.Errorf("an invalid email was provided: '%s'. ", email)
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 			err = application.SwitchCurrentUser(email)
 			if err != nil {
 				application.GetPrinter().Error(err)
 			}
-			return nil
 		},
 	}
 	switchCmd.Flags().StringVarP(

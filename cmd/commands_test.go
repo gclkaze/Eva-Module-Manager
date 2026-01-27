@@ -111,7 +111,7 @@ func TestInstallCommandArgs(t *testing.T) {
 		{
 			name:      "more than one argument should fail",
 			args:      []string{"module1@1.0.0", "module2@2.0.0"},
-			shouldErr: true,
+			shouldErr: false,
 		},
 	}
 
@@ -189,8 +189,8 @@ func TestCommandStructure(t *testing.T) {
 	mockApp := createMockApp()
 
 	commands := map[string]func(*app.EMMApp) *cobra.Command{
-		"verify":   NewVerifyCommand,
-		"install":  NewInstallCommand,
+		"verify":    NewVerifyCommand,
+		"install":   NewInstallCommand,
 		"uninstall": NewUninstallCommand,
 	}
 

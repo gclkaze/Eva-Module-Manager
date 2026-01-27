@@ -10,10 +10,11 @@ import (
 
 func NewUserBanCommand(application *app.EMMApp) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "ban <email>",
-		Short: "Ban a user associated to a userID or email.",
-		Long:  "Ban a user associated to a userID or email.",
-		Args:  cobra.ExactArgs(1),
+		Use:     "ban <email>",
+		Aliases: []string{"b"},
+		Short:   "Ban a user associated to a userID or email.",
+		Long:    "Ban a user associated to a userID or email.",
+		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if utils.IsUint(args[0]) {
 				banByID(cmd, args[0])

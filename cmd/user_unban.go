@@ -10,10 +10,11 @@ import (
 
 func NewUserUnbanCommand(application *app.EMMApp) *cobra.Command {
 	cmd := &cobra.Command{
-		Use:   "unban <email>",
-		Short: "Unban an already banned user associated to a userID or an email.",
-		Long:  "Unban an already banned user associated to a userID or an email.",
-		Args:  cobra.ExactArgs(1),
+		Use:     "unban <email>",
+		Aliases: []string{"u"},
+		Short:   "Unban an already banned user associated to a userID or an email.",
+		Long:    "Unban an already banned user associated to a userID or an email.",
+		Args:    cobra.ExactArgs(1),
 		Run: func(cmd *cobra.Command, args []string) {
 			if utils.IsUint(args[0]) {
 				unbanByID(cmd, args[0])

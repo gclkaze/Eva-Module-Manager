@@ -13,23 +13,23 @@ func NewModuleSuggestionCommand(application *app.EMMApp) *cobra.Command {
 	var suggestionCmd = &cobra.Command{
 		Use:   "suggest [params...]",
 		Short: "Suggest a module for release",
-		RunE: func(cmd *cobra.Command, args []string) error {
+		Run: func(cmd *cobra.Command, args []string) {
 			tk, err := application.GetCurrentUserToken()
 			if err != nil {
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 
 			err = suggestionParams.AllValid()
 			if err != nil {
 				application.GetPrinter().Error(err)
-				return nil
+				return
 			}
 			err = application.SuggestModuleRelease(tk, suggestionParams)
 			if err != nil {
 				application.GetPrinter().Error(err)
 			}
-			return nil
+			return
 
 		},
 	}
