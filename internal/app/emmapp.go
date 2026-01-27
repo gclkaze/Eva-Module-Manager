@@ -87,7 +87,7 @@ func (inst *EMMApp) InitFromPath(path string) error {
 	return inst.backend.InitFromPath(path)
 }
 
-func (inst EMMApp) GetCurrentUserPermissions() []string {
+func (inst EMMApp) GetCurrentUserPermissions() map[string]bool {
 	return inst.authService.GetCurrentUserPermissions()
 }
 

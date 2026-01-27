@@ -29,5 +29,15 @@ func (inst UploadParams) AllValid() error {
 		return fmt.Errorf("the module representation name is not correct...need to be between %d and %d characters, only digits and letters are accepted", utils.ModuleReprMin, utils.ModuleReprMax)
 	}
 
+	err := utils.IsValidRepr(inst.Repr)
+	if err != nil {
+		return err
+	}
+
+	err = utils.IsValidDescription(inst.Description)
+	if err != nil {
+		return err
+	}
+
 	return nil
 }

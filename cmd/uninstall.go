@@ -3,6 +3,7 @@ package cmd
 import (
 	"emm/internal/app"
 	"emm/internal/models"
+	"emm/pkg/utils"
 	"fmt"
 	"strings"
 
@@ -50,6 +51,12 @@ func UninstallRunE(application *app.EMMApp, path *string) func(cmd *cobra.Comman
 		}
 		ctx := cmd.Context()
 		var summary *models.PurgeSummary
+
+		res, err := utils.IsValidModuleOrModuleVersion(args[0])
+		if !res {
+			application.GetPrinter().Error(err)
+			return nil
+		}
 
 		summary, err = application.UninstallModule(ctx, token, args[0], path)
 

@@ -3,6 +3,7 @@ package cmd
 import (
 	"emm/internal/app"
 	"emm/internal/models/userinput"
+	"emm/pkg/utils"
 	"fmt"
 	"strings"
 
@@ -32,11 +33,24 @@ func NewSearchArtifactsCommand(application *app.EMMApp) *cobra.Command {
 			query := ""
 			if searchQuery.IsEmpty() {
 				query = strings.Join(args, " ")
-				fmt.Println("Search query:", query)
 
+			} else {
+				searchQuery.Normalize()
+				err := searchQuery.IsValid()
+				if err != nil {
+					application.GetPrinter().Error(err)
+					return nil
+				}
 			}
 			if query != "" {
-				err := application.SearchByQuery(query)
+				toks, err := utils.ParseSearchPhrases(query)
+				if err != nil {
+					application.GetPrinter().Error(err)
+					return nil
+				}
+
+				query = strings.Join(toks, ",")
+				err = application.SearchByQuery(query)
 				return err
 			}
 

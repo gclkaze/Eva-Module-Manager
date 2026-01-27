@@ -143,7 +143,7 @@ func (inst ModuleReleaseService) DownloadRelease(ctx context.Context, token stri
 	} else {
 		inst.output.Info(fmt.Sprintf("✅ Module %s was downloaded successfully at '%s'.", inst.GetModuleTarBallName(module, version), saveLocation))
 	}
-	return err
+	return nil
 }
 
 func (inst ModuleReleaseService) GetLatestModuleRelease(ctx context.Context, token string, module string) (*models.ReleaseDTO, error) {
@@ -191,7 +191,6 @@ func (inst ModuleReleaseService) downloadPublicRelease(ctx context.Context, modu
 	if err != nil {
 		return err
 	}
-
 	req, err := http.NewRequestWithContext(ctx, http.MethodGet, fmt.Sprintf("%s%s%s%s%s@%s", url, APIGroup, DownloadGroup, "/release/", module, version), nil)
 	if err != nil {
 		return err

@@ -2,6 +2,7 @@ package cmd
 
 import (
 	"emm/internal/app"
+	"emm/pkg/utils"
 	"fmt"
 
 	"github.com/spf13/cobra"
@@ -20,6 +21,12 @@ func NewShowModuleInfoCommand(application *app.EMMApp) *cobra.Command {
 				return fmt.Errorf("provide the module name or module-name@version for module/release information")
 			}
 			module = args[0]
+			isValid, err := utils.IsValidModuleOrModuleVersion(module)
+			if !isValid {
+				application.SetOnError()
+				application.GetPrinter().Error(err)
+				return nil
+			}
 			return nil
 		},
 		RunE: func(cmd *cobra.Command, args []string) error {

@@ -8,7 +8,7 @@ import (
 
 func NewModuleUserGetCommand(application *app.EMMApp) *cobra.Command {
 	var userModuleGetCmd = &cobra.Command{
-		Use:   "mylist [params...]",
+		Use:   "mylist",
 		Short: "List my modules",
 		Args:  cobra.ExactArgs(0),
 		RunE: func(cmd *cobra.Command, args []string) error {

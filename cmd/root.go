@@ -67,27 +67,8 @@ func initApp() error {
 }
 func initCmd() {
 	rootCmd.AddCommand(
-		/*		NewVerifyCommand(application),
-				NewInstallCommand(application),
-				NewUninstallCommand(application),
-
-				NewShowModuleInfoCommand(application),
-				NewSearchArtifactsCommand(application),
-
-				NewLoginCommand(application),
-				NewRegisterCommand(application),
-				NewSwitchUserCommand(application),
-				NewLogoutCommand(application),
-				NewWhoamiCommand(application),
-
-				NewUserParentCommand(application),
-				NewModuleParentCommand(application),
-				NewReleaseParentCommand(application),*/
-
 		enableFunctionsBasedOnPermissions(application, application.GetCurrentUserPermissions())...,
 	)
-
-	//perms := application.GetCurrentUserPermissions()
 
 	rootCmd.PersistentFlags().BoolVarP(
 		application.GetPrinter().GetVerboseFlagPointer(),

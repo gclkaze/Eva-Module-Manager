@@ -185,7 +185,7 @@ func (inst AuthService) combineToken(resp models.LoginResponse) string {
 func (inst AuthService) GetCurrentUserPermissions() map[string]bool {
 	u, err := inst.GetCurrentUserToken()
 	if err != nil {
-		inst.output.Error(fmt.Errorf("you need to login first"))
+		//inst.output.Error(fmt.Errorf("you need to login first"))
 		return nil
 	}
 

@@ -13,6 +13,12 @@ func NewReleaseCancelCommand(application *app.EMMApp) *cobra.Command {
 		Args:  cobra.ExactArgs(1),
 		Short: "Cancel a suggested release of a Module with a specific Version",
 		RunE: func(cmd *cobra.Command, args []string) error {
+			res, err := utils.IsValidSpecificModuleVersion(args[0])
+			if !res {
+				application.SetOnError()
+				application.GetPrinter().Error(err)
+				return nil
+			}
 			module, version, err := utils.ParseModuleReleaseVersion(args[0])
 			if err != nil {
 				application.GetPrinter().Error(err)

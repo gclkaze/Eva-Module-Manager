@@ -362,7 +362,7 @@ func (inst *InstallService) InstallKnownModule(ctx context.Context, token string
 	if err != nil {
 		summary.Failed += 1
 		utils.CleanAndRemoveFolder(modulePath)
-		return false, err
+		return false, nil
 	}
 	inst.output.VerboseInfo(fmt.Sprintf("Download completed of '%s@%s', storing it at %s.", inputModule, inputVersion, modulePath))
 	err = inst.BuildModuleFolderFromTar(ctx, inputModule, inputVersion, modulePath)

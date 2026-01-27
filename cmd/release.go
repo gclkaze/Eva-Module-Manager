@@ -15,9 +15,11 @@ func NewReleaseParentCommand(application *app.EMMApp, thePerms map[string]bool) 
 
 	cmd.AddCommand(
 		NewReleaseDownloadCommand(application),
-		NewReleaseDumpCommand(application),
 	)
 
+	if perms.ContainsMappedPerms([]perms.Permission{perms.UpdateReleases}, thePerms) {
+		cmd.AddCommand(NewReleaseDumpCommand(application))
+	}
 	if perms.ContainsMappedPerms([]perms.Permission{perms.AcceptReleases}, thePerms) {
 		cmd.AddCommand(NewReleaseAcceptCommand(application))
 	}

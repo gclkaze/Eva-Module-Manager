@@ -18,7 +18,7 @@ func NewInstallCommand(application *app.EMMApp) *cobra.Command {
 		Use:   "install [module@version]",
 		Short: "Downloads && installs EVA modules (all from eva.json, a single module@version, or from --path).",
 		Long:  "Downloads && installs EVA modules (all from eva.json, a single module@version, or from --path).",
-		Args:  installArgs(application, &path),
+		Args:  installArgs(&path),
 		RunE:  installRunE(application, &path),
 	}
 
@@ -28,20 +28,32 @@ func NewInstallCommand(application *app.EMMApp) *cobra.Command {
 	return cmd
 }
 
-func installArgs(application *app.EMMApp, path *string) cobra.PositionalArgs {
+func installArgs(path *string) cobra.PositionalArgs {
 	return func(cmd *cobra.Command, args []string) error {
 		pathSet := cmd.Flags().Changed("path")
 		if len(args) > 1 {
-			return fmt.Errorf("invalid usage: expected 0 or 1 argument ([module@version])")
+			application.SetOnError()
+			application.GetPrinter().Error(fmt.Errorf("invalid usage: expected 0 or 1 argument ([module@version])"))
+			return nil
 		}
 
 		if pathSet && strings.TrimSpace(*path) == "" {
-			return fmt.Errorf("--path cannot be empty")
+			application.SetOnError()
+			application.GetPrinter().Error(fmt.Errorf("--path cannot be empty"))
+			return nil
 		}
 
 		if len(args) == 1 {
+			res, err := utils.IsValidModuleOrModuleVersion(args[0])
+			if !res {
+				application.SetOnError()
+				application.GetPrinter().Error(err)
+				return nil
+			}
 			if _, _, err := utils.ParseModuleReleaseVersion(args[0]); err != nil {
-				return err
+				application.GetPrinter().Error(err)
+				application.SetOnError()
+				return nil
 			}
 		}
 
@@ -51,6 +63,9 @@ func installArgs(application *app.EMMApp, path *string) cobra.PositionalArgs {
 
 func installRunE(application *app.EMMApp, path *string) func(cmd *cobra.Command, args []string) error {
 	return func(cmd *cobra.Command, args []string) error {
+		if application.IsOnError() {
+			return nil
+		}
 		pathSet := cmd.Flags().Changed("path")
 
 		token, err := application.GetCurrentUserToken()
@@ -80,7 +95,7 @@ func installRunE(application *app.EMMApp, path *string) func(cmd *cobra.Command,
 
 		application.GetPrinter().PrintSummary(summary)
 
-		application.GetPrinter().Info("installation operation completed successfully.")
+		//application.GetPrinter().Info("installation operation completed successfully.")
 		return nil
 	}
 }
