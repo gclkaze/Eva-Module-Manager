@@ -20,16 +20,14 @@ func NewModuleSuggestionCommand(application *app.EMMApp) *cobra.Command {
 				return
 			}
 
-			err = suggestionParams.AllValid()
-			if err != nil {
+			if err := suggestionParams.AllValid(); err != nil {
 				application.GetPrinter().Error(err)
 				return
 			}
-			err = application.SuggestModuleRelease(tk, suggestionParams)
-			if err != nil {
+
+			if err := application.SuggestModuleRelease(tk, suggestionParams); err != nil {
 				application.GetPrinter().Error(err)
 			}
-			return
 
 		},
 	}
@@ -51,6 +49,28 @@ func NewModuleSuggestionCommand(application *app.EMMApp) *cobra.Command {
 		"Module release version (required)",
 	)
 
+	suggestionCmd.Flags().StringVarP(
+		&suggestionParams.Description,
+		"description",
+		"d",
+		"",
+		"Release description (optional)",
+	)
+
+	suggestionCmd.Flags().StringVarP(
+		&suggestionParams.TagsCSV,
+		"tags",
+		"k",
+		"",
+		"Comma-separated release tags (optional)",
+	)
+
+	suggestionCmd.Flags().BoolVar(
+		&suggestionParams.InheritModuleTags,
+		"inherit-module-tags",
+		false,
+		"Inherit tags from the module when creating the release",
+	)
 	_ = suggestionCmd.MarkFlagRequired("module-name")
 	_ = suggestionCmd.MarkFlagRequired("version")
 

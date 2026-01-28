@@ -634,3 +634,49 @@ func ParseSearchPhrases(raw string) ([]string, error) {
 
 	return out, nil
 }
+
+func ParseTagsCSV(input string) ([]string, error) {
+	raw := strings.TrimSpace(input)
+	if raw == "" {
+		return nil, nil // whole field empty is allowed
+	}
+
+	parts := strings.Split(raw, ",")
+	seen := make(map[string]struct{}, len(parts))
+	out := make([]string, 0, len(parts))
+
+	for i, p := range parts {
+		tag := strings.ToLower(strings.TrimSpace(p))
+
+		// 🚫 empty elements are NOT allowed
+		if tag == "" {
+			return nil, fmt.Errorf("tags[%d] is empty", i)
+		}
+
+		if len(tag) < TagMinLen || len(tag) > TagMaxLen {
+			return nil, fmt.Errorf(
+				"tags[%d] length must be between %d and %d characters",
+				i,
+				TagMinLen,
+				TagMaxLen,
+			)
+		}
+
+		if !tagRe.MatchString(tag) {
+			return nil, fmt.Errorf("tags[%d] contains invalid characters", i)
+		}
+
+		if _, ok := seen[tag]; ok {
+			continue // duplicates are fine, just ignored
+		}
+
+		seen[tag] = struct{}{}
+		out = append(out, tag)
+
+		if len(out) > MaxTags {
+			return nil, fmt.Errorf("too many tags (max %d)", MaxTags)
+		}
+	}
+
+	return out, nil
+}

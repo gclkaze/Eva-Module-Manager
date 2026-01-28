@@ -87,6 +87,16 @@ func (inst *ModuleService) SuggestModuleRelease(token string, params *userinput.
 
 		_ = writer.WriteField("modId", utils.UintToString(m.ID))
 		_ = writer.WriteField("version", params.Version)
+
+		inherits := "0"
+		if params.InheritModuleTags {
+			inherits = "1"
+		}
+
+		_ = writer.WriteField("inherit_tags", inherits)
+		_ = writer.WriteField("description", params.Description)
+		_ = writer.WriteField("tags", params.TagsCSV)
+
 		writer.Close()
 
 		url, err := inst.backend.GetServerURL()
