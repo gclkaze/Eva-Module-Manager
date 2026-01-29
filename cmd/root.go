@@ -84,6 +84,7 @@ func enableFunctionsBasedOnPermissions(application *app.EMMApp, thePerms map[str
 	cmds = append(cmds, NewVerifyCommand(application))
 	cmds = append(cmds, NewInstallCommand(application))
 	cmds = append(cmds, NewUninstallCommand(application))
+	cmds = append(cmds, NewListCommand(application))
 
 	cmds = append(cmds, NewShowModuleInfoCommand(application))
 	cmds = append(cmds, NewSearchArtifactsCommand(application))

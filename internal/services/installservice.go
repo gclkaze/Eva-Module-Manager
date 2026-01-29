@@ -747,3 +747,13 @@ func (inst *InstallService) BuildModuleFolderFromTar(ctx context.Context, module
 	}
 	return utils.DeleteFile(theFile)
 }
+
+func (inst InstallService) ListModules(showAll bool, path string) error {
+	theProject, absPath, err := inst.GetEvaProjectFile(&path)
+	if err != nil {
+		return err
+	}
+
+	inst.output.PrintEvaModulesWithShowAll(theProject, path, absPath, showAll)
+	return nil
+}

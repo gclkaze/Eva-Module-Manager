@@ -4,6 +4,7 @@ import (
 	"archive/tar"
 	"compress/gzip"
 	"errors"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
@@ -180,4 +181,37 @@ func GetModuleVersionContents(path string) ([]string, error) {
 		}
 	}
 	return folders, nil
+}
+
+func ValidateOptionalDirPath(input string) (string, error) {
+	p := strings.TrimSpace(input)
+	if p == "" {
+		return "", nil // optional
+	}
+
+	// reject control characters (esp. NUL)
+	for _, r := range p {
+		if r < 32 {
+			return "", fmt.Errorf("path contains invalid control characters")
+		}
+	}
+
+	abs, err := filepath.Abs(p)
+	if err != nil {
+		return "", fmt.Errorf("invalid path: %w", err)
+	}
+
+	info, err := os.Stat(abs)
+	if err != nil {
+		if os.IsNotExist(err) {
+			return "", fmt.Errorf("path does not exist: %s", abs)
+		}
+		return "", fmt.Errorf("cannot access path %s: %w", abs, err)
+	}
+
+	if !info.IsDir() {
+		return "", fmt.Errorf("path is not a directory: %s", abs)
+	}
+
+	return abs, nil
 }

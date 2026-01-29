@@ -3,6 +3,7 @@ package output
 import (
 	"emm/internal/models"
 	"emm/internal/models/dto"
+	"emm/internal/models/eva"
 )
 
 type Printer interface {
@@ -24,4 +25,6 @@ type Printer interface {
 
 	GetVerboseFlagPointer() *bool
 	PrintDevelopers(devs []dto.DeveloperDTO, currentEmail string)
+
+	PrintEvaModulesWithShowAll(p *eva.EvaProject, projectRoot, projectFileAbs string, showAll bool)
 }

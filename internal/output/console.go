@@ -3,9 +3,11 @@ package output
 import (
 	"emm/internal/models"
 	"emm/internal/models/dto"
+	"emm/internal/models/eva"
 	"emm/pkg/utils"
 	"fmt"
 	"os"
+	"path/filepath"
 	"sort"
 	"strings"
 
@@ -22,6 +24,14 @@ type row struct {
 	RepoName   string
 	Release    models.ReleaseDTO
 	Tags       []string
+}
+
+type moduleRow struct {
+	Info        eva.EvaModuleInfo
+	AbsPath     string
+	Referenced  bool
+	OnDisk      bool
+	DisplayPath string
 }
 
 func NewConsolePrinter(verbose bool) *ConsolePrinter {
@@ -740,4 +750,181 @@ func (p ConsolePrinter) PrintReleaseInfo(moduleRepr string, r models.Release) {
 			r.Version,
 		)),
 	)
+}
+
+func (inst ConsolePrinter) PrintEvaModulesWithShowAll(p *eva.EvaProject, projectRoot, projectFileAbs string, showAll bool) {
+	title := color.New(color.FgHiWhite, color.Bold).SprintFunc()
+	nameOK := color.New(color.FgHiGreen, color.Bold).SprintFunc()
+	nameMissing := color.New(color.FgHiRed, color.Bold).SprintFunc()
+	verC := color.New(color.FgHiCyan).SprintFunc()
+	pathC := color.New(color.FgHiBlack).SprintFunc()
+	warnC := color.New(color.FgHiYellow, color.Bold).SprintFunc()
+	orphanC := color.New(color.FgHiYellow).SprintFunc() // on disk but not referenced
+
+	// Always show where we loaded from
+	if projectFileAbs != "" {
+		fmt.Fprintf(os.Stdout, "%s %s\n", title("Project file:"), pathC(projectFileAbs))
+	}
+	fmt.Fprintln(os.Stdout)
+
+	if p == nil {
+		fmt.Fprintln(os.Stdout, warnC("No project loaded."))
+		return
+	}
+
+	// 1) Collect referenced modules from eva.json
+	referenced := map[string]eva.EvaModuleInfo{}
+	for k, m := range p.Modules {
+		referenced[k] = m
+	}
+
+	// 2) Scan filesystem modules if showAll
+	onDisk := map[string]eva.EvaModuleInfo{}
+	// expected structure: <projectRoot>/<ModulesFolder>/<moduleName>/<version>/
+	base := filepath.Join(projectRoot, p.ModulesFolder)
+	entries, err := os.ReadDir(base)
+	if err == nil { // if folder missing, just treat as empty
+		for _, modDir := range entries {
+			if !modDir.IsDir() {
+				continue
+			}
+			modName := modDir.Name()
+			verBase := filepath.Join(base, modName)
+
+			verEntries, err := os.ReadDir(verBase)
+			if err != nil {
+				continue
+			}
+			for _, verDir := range verEntries {
+				if !verDir.IsDir() {
+					continue
+				}
+				ver := verDir.Name()
+				key := modName + "@" + ver
+				relInstall := filepath.Join(p.ModulesFolder, modName, ver)
+
+				onDisk[key] = eva.EvaModuleInfo{
+					ModuleName:         modName,
+					Version:            ver,
+					InstallationFolder: relInstall,
+				}
+			}
+		}
+	}
+
+	// 3) Build union rows
+	unionKeys := make(map[string]struct{})
+	for k := range referenced {
+		unionKeys[k] = struct{}{}
+	}
+	if showAll {
+		for k := range onDisk {
+			unionKeys[k] = struct{}{}
+		}
+	}
+
+	// If not showAll and no referenced modules
+	if !showAll && len(unionKeys) == 0 {
+		fmt.Fprintln(os.Stdout, warnC("No modules referenced in eva.json."))
+		return
+	}
+
+	rows := make([]moduleRow, 0, len(unionKeys))
+	for k := range unionKeys {
+		var info eva.EvaModuleInfo
+		ref := false
+		disk := false
+
+		if m, ok := referenced[k]; ok {
+			info = m
+			ref = true
+		}
+		if m, ok := onDisk[k]; ok {
+			// prefer referenced info if present; otherwise use disk-derived info
+			if !ref {
+				info = m
+			}
+			disk = true
+		}
+
+		abs := info.InstallationFolder
+		if projectRoot != "" {
+			abs = filepath.Join(projectRoot, info.InstallationFolder)
+		}
+
+		rows = append(rows, moduleRow{
+			Info:       info,
+			AbsPath:    abs,
+			Referenced: ref,
+			OnDisk:     disk,
+		})
+	}
+
+	// 4) Sort rows: name, version
+	sort.Slice(rows, func(i, j int) bool {
+		if rows[i].Info.ModuleName == rows[j].Info.ModuleName {
+			return rows[i].Info.Version < rows[j].Info.Version
+		}
+		return rows[i].Info.ModuleName < rows[j].Info.ModuleName
+	})
+
+	// 5) Column widths
+	maxName, maxVer := len("NAME"), len("VERSION")
+	for _, r := range rows {
+		if len(r.Info.ModuleName) > maxName {
+			maxName = len(r.Info.ModuleName)
+		}
+		if len(r.Info.Version) > maxVer {
+			maxVer = len(r.Info.Version)
+		}
+	}
+
+	// 6) Header
+	header := "Referenced modules"
+	if showAll {
+		header = "Modules (referenced + filesystem)"
+	}
+	fmt.Fprintln(os.Stdout, title(header))
+	fmt.Fprintln(os.Stdout, strings.Repeat("─", maxName+maxVer+6+50))
+	fmt.Fprintf(os.Stdout, "%-*s  %-*s  %s\n", maxName, "NAME", maxVer, "VERSION", "PATH")
+	fmt.Fprintln(os.Stdout, strings.Repeat("─", maxName+maxVer+6+50))
+
+	// 7) Rows with coloring rules
+	var missingCount, orphanCount int
+
+	for _, r := range rows {
+		name := r.Info.ModuleName
+
+		// Referenced but missing on disk => RED
+		if r.Referenced && !r.OnDisk {
+			name = nameMissing(name)
+			missingCount++
+		} else if !r.Referenced && r.OnDisk {
+			// On disk but not referenced (only possible in showAll) => yellow (optional)
+			name = orphanC(name)
+			orphanCount++
+		} else {
+			// Normal referenced + present
+			name = nameOK(name)
+		}
+
+		fmt.Fprintf(
+			os.Stdout,
+			"%-*s  %-*s  %s\n",
+			maxName, name,
+			maxVer, verC(r.Info.Version),
+			pathC(r.AbsPath),
+		)
+	}
+
+	// 8) Footer summary
+	fmt.Fprintln(os.Stdout, strings.Repeat("─", maxName+maxVer+6+50))
+	fmt.Fprintf(os.Stdout, "%s %d\n", title("Total:"), len(rows))
+
+	if missingCount > 0 {
+		fmt.Fprintf(os.Stdout, "%s %d\n", nameMissing("Missing on disk:"), missingCount)
+	}
+	if showAll && orphanCount > 0 {
+		fmt.Fprintf(os.Stdout, "%s %d\n", warnC("On disk but not referenced:"), orphanCount)
+	}
 }

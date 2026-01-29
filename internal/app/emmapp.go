@@ -224,3 +224,7 @@ func (inst EMMApp) UserBanByID(ctx context.Context, token string, userID uint) e
 func (inst EMMApp) UserUnbanByID(ctx context.Context, token string, userID uint) error {
 	return inst.supervisionService.UserUnbanByID(ctx, token, userID)
 }
+
+func (inst EMMApp) ListModules(showAll bool, path string) error {
+	return inst.installService.ListModules(showAll, path)
+}
