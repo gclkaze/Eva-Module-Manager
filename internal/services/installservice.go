@@ -7,7 +7,9 @@ import (
 	"emm/internal/models/eva"
 	"emm/internal/output"
 	"emm/pkg/utils"
+	"encoding/json"
 	"fmt"
+	"os"
 	"path/filepath"
 	"strings"
 
@@ -57,6 +59,33 @@ func (inst *InstallService) InstallAllFromPath(ctx context.Context, token string
 	}
 
 	return inst.InstallAllFromProjectFile(ctx, token, filename)
+}
+
+func (inst InstallService) createEmptyEvaFile(eva string) error {
+
+	evaFolder := inst.props.GetString("eva_modules_location", "")
+	config := map[string]interface{}{
+		"schemaVersion": 1,
+		"modulesFolder": evaFolder,
+		"modules":       map[string]interface{}{},
+	}
+
+	data, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return fmt.Errorf("failed to marshal config: %w", err)
+	}
+
+	if err := os.MkdirAll(evaFolder, 0755); err != nil {
+		return fmt.Errorf("failed to create modules folder: %w", err)
+	}
+
+	if !utils.FolderExists(evaFolder) {
+		if err := utils.CreateFolder(evaFolder); err != nil {
+			return err
+		}
+	}
+
+	return os.WriteFile(eva, data, 0644)
 }
 
 // it searches in project modules in order to find the module
@@ -529,8 +558,16 @@ func (inst *InstallService) GetEvaProjectFile(path *string) (*eva.EvaProject, st
 func (inst *InstallService) InstallAllFromProject(ctx context.Context, token string) (*models.InstallationSummary, error) {
 	eva := inst.bookKeepingService.DefaultEvaFileName()
 	filename := filepath.Join(inst.cwd, eva)
+	/*	if !utils.FileExists(filename) {
+			return nil, fmt.Errorf("project file '%s' does not exist", filename)
+		}
+	*/
 	if !utils.FileExists(filename) {
-		return nil, fmt.Errorf("project file '%s' does not exist", filename)
+		inst.output.Info(fmt.Sprintf("project file '%s' does not exist...creating it", filename))
+		err := inst.createEmptyEvaFile(filename)
+		if err != nil {
+			return nil, err
+		}
 	}
 
 	return inst.InstallAllFromProjectFile(ctx, token, filename)

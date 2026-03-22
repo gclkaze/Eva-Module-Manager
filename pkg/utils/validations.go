@@ -203,7 +203,7 @@ func IsValidRepoName(name string) error {
 	}
 
 	if !repoNameRegex.MatchString(name) {
-		return fmt.Errorf("a valid module name is between %d and %d character length, consist of digits, numbers,dash or/and underscore", repoNameMin, repoNameMax)
+		return fmt.Errorf("a valid module name is between %d and %d character length, consist of digits, numbers,dash or/and underscore ", repoNameMin, repoNameMax)
 	}
 	return nil
 }

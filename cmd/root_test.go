@@ -5,6 +5,7 @@ import (
 	"emm/internal/app"
 	"emm/internal/models"
 	"emm/internal/models/dto"
+	"emm/internal/models/eva"
 	"emm/internal/services"
 	"testing"
 
@@ -78,6 +79,10 @@ func (m *MockPrinter) PrintSummary(summary *models.InstallationSummary) {
 
 func (m *MockPrinter) PrintUninstallSummary(summary *models.PurgeSummary) {
 	// Mock implementation
+}
+
+func (m *MockPrinter) PrintEvaModulesWithShowAll(p *eva.EvaProject, projectRoot, projectFileAbs string, showAll bool) {
+
 }
 
 func (m *MockPrinter) PrintDetailedModuleReleaseInfo(mods []models.ModuleEnrichedDTO) {

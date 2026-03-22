@@ -23,6 +23,7 @@ package config
 import (
 	"fmt"
 	"os"
+	"path/filepath"
 
 	"github.com/magiconair/properties"
 )
@@ -84,9 +85,24 @@ func (c *ConfigReader) readPropertiesFromMap(m *map[string]string) error {
 	return nil
 }
 
-func (c *ConfigReader) readProperties() error {
+/*func (c *ConfigReader) readProperties() error {
 	currentPath, _ := os.Getwd()
 	f := currentPath + "\\internal\\config\\application.properties"
+	c.properties = properties.MustLoadFile(f, properties.UTF8)
+	if c.properties == nil {
+		return fmt.Errorf("couldn't read application properties file %s", f)
+	}
+	return nil
+}*/
+
+func (c *ConfigReader) readProperties() error {
+	exePath, err := os.Executable()
+	if err != nil {
+		return fmt.Errorf("couldn't determine executable path: %w", err)
+	}
+	exeDir := filepath.Dir(exePath)
+	f := filepath.Join(exeDir, "internal", "config", "application.properties")
+
 	c.properties = properties.MustLoadFile(f, properties.UTF8)
 	if c.properties == nil {
 		return fmt.Errorf("couldn't read application properties file %s", f)

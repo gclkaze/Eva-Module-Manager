@@ -89,7 +89,7 @@ func installRun(application *app.EMMApp, path *string) func(cmd *cobra.Command, 
 			summary, err = installSingleModule(ctx, token, application, args[0], path)
 		}
 		if err != nil {
-			application.GetPrinter().Error(err)
+			//application.GetPrinter().Error(err)
 			application.GetPrinter().Error(fmt.Errorf("installation operation failed"))
 			return
 		}
